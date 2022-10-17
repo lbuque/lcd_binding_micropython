@@ -155,7 +155,7 @@ mp_obj_t st7789_ST7789_make_new(const mp_obj_type_t *type, size_t n_args, size_t
 
 STATIC mp_obj_t st7789_ST7789_deinit(mp_obj_t self_in)
 {
-    st7789_ST7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    // st7789_ST7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
     // m_del_obj(st7789_ST7789_obj_t, self);
     return mp_const_none;
 }
@@ -242,50 +242,6 @@ STATIC mp_obj_t st7789_ST7789_bitmap(size_t n_args, const mp_obj_t *args_in)
     st7789_ST7789_obj_t *self = MP_OBJ_TO_PTR(args_in[0]);
     mp_obj_t args_out[2];
 
-    // int x_start = mp_obj_get_int(args_in[1]);
-    // int y_start = mp_obj_get_int(args_in[2]);
-    // int x_end   = mp_obj_get_int(args_in[3]);
-    // int y_end   = mp_obj_get_int(args_in[4]);
-    // mp_buffer_info_t bufinfo;
-    // mp_get_buffer_raise(args_in[5], &bufinfo, MP_BUFFER_WRITE);
-    // // for (size_t i = 0; i < bufinfo.len; i++)
-    // // {
-    // //     printf("0x%02x ", ((uint8_t *)bufinfo.buf)[i]);
-    // // }
-    // // mp_printf(&mp_plat_print, "\n");
-    // mp_hal_delay_ms(1000);
-    // esp_lcd_panel_draw_bitmap(self->panel_handle, x_start, y_start, x_end, y_end, bufinfo.buf);
-
-#if 0
-    // parallelbus_i80_obj_t *bus = MP_OBJ_TO_PTR(self->bus_obj);
-    // int x_start = mp_obj_get_int(args_in[1]);
-    // int y_start = mp_obj_get_int(args_in[2]);
-    // int x_end   = mp_obj_get_int(args_in[3]);
-    // int y_end   = mp_obj_get_int(args_in[4]);
-
-    // x_start += self->x_gap;
-    // x_end += self->x_gap;
-    // y_start += self->y_gap;
-    // y_end += self->y_gap;
-
-    // esp_lcd_panel_io_tx_param(bus->io_handle, 0x2A, (uint8_t[]) {
-    //     (x_start >> 8) & 0xFF,
-    //     x_start & 0xFF,
-    //     ((x_end - 1) >> 8) & 0xFF,
-    //     (x_end - 1) & 0xFF,
-    // }, 4);
-
-    // esp_lcd_panel_io_tx_param(bus->io_handle, 0x2B, (uint8_t[]) {
-    //     (y_start >> 8) & 0xFF,
-    //     y_start & 0xFF,
-    //     ((y_end - 1) >> 8) & 0xFF,
-    //     (y_end - 1) & 0xFF,
-    // }, 4);
-    // mp_buffer_info_t bufinfo;
-    // mp_get_buffer_raise(args_in[5], &bufinfo, MP_BUFFER_READ);
-    // esp_lcd_panel_io_tx_color(bus->io_handle, 0x2C, bufinfo.buf, ((x_end - x_start) * (y_end - y_start) * self->bits_per_pixel / 8));
-
-#else
     int x_start = mp_obj_get_int(args_in[1]);
     int y_start = mp_obj_get_int(args_in[2]);
     int x_end   = mp_obj_get_int(args_in[3]);
@@ -295,11 +251,6 @@ STATIC mp_obj_t st7789_ST7789_bitmap(size_t n_args, const mp_obj_t *args_in)
     x_end += self->x_gap;
     y_start += self->y_gap;
     y_end += self->y_gap;
-
-    mp_printf(&mp_plat_print, "<x_start=%u>\n", x_start);
-    mp_printf(&mp_plat_print, "<x_end=%u>\n", x_end);
-    mp_printf(&mp_plat_print, "<y_start=%u>\n", y_start);
-    mp_printf(&mp_plat_print, "<y_end=%u>\n", y_end);
 
     args_out[0] = mp_obj_new_int(0x2A);
     args_out[1] = mp_obj_new_bytes((uint8_t[]) {
@@ -332,27 +283,19 @@ STATIC mp_obj_t st7789_ST7789_bitmap(size_t n_args, const mp_obj_t *args_in)
     gc_collect();
 
     mp_buffer_info_t bufinfo;
-    mp_get_buffer_raise(args_in[5], &bufinfo, MP_BUFFER_WRITE);
-    uint16_t *bitmap = (uint16_t *)m_malloc(bufinfo.len);
-    args_out[0] = mp_obj_new_int(0x2C);
+    mp_get_buffer_raise(args_in[5], &bufinfo, MP_BUFFER_READ);
 
-    if (bitmap) {
-        memcpy((uint8_t *)bitmap, bufinfo.buf, ((x_end - x_start) * (y_end - y_start) * self->bits_per_pixel / 8));
-        args_out[1] = mp_obj_new_bytearray_by_ref(((x_end - x_start) * (y_end - y_start) * self->bits_per_pixel / 8), bitmap);
-    } else {
-        args_out[1] = mp_obj_new_bytearray_by_ref(((x_end - x_start) * (y_end - y_start) * self->bits_per_pixel / 8), bufinfo.buf);
-    }
+    args_out[0] = mp_obj_new_int(0x2C);
+    // args_out[1] = mp_obj_new_bytearray_by_ref(((x_end - x_start) * (y_end - y_start) * self->bits_per_pixel / 8), bufinfo.buf);
+    args_out[1] = mp_obj_new_bytes(bufinfo.buf, ((x_end - x_start) * (y_end - y_start) * self->bits_per_pixel / 8));
     mp_call_method_self_n_kw(self->tx_color_method[0],
                              self->tx_color_method[1],
                              2,
                              0,
                              args_out);
     m_del_obj(mp_obj_array_t, MP_OBJ_TO_PTR(args_out[1]));
-    if (bitmap) {
-        m_free(bitmap);
-    }
     gc_collect();
-#endif
+
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(st7789_ST7789_bitmap_obj, 6, 6, st7789_ST7789_bitmap);

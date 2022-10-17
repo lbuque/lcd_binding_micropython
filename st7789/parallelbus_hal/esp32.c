@@ -62,7 +62,7 @@ void hal_parallelbus_i80_construct(parallelbus_i80_obj_t *self) {
     esp_lcd_panel_set_gap(panel_handle, 0, 35);
 
     uint16_t *s_lines = (uint16_t *)heap_caps_malloc(170 * 320 * sizeof(uint16_t), MALLOC_CAP_DMA);
-    
+
     memcpy((uint8_t *)s_lines, gImage_girl, 108800);
     esp_lcd_panel_draw_bitmap(panel_handle, 0, 0, 320, 170, s_lines);
     mp_hal_delay_ms(1000);

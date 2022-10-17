@@ -88,9 +88,6 @@ STATIC mp_obj_t parallelbus_i80_make_new(const mp_obj_type_t *type, size_t n_arg
     self->cmd_bits         = args[ARG_cmd_bits].u_int;
     self->param_bits       = args[ARG_param_bits].u_int;
 
-    mp_printf(&mp_plat_print, "<width=%u>\n", self->width);
-    mp_printf(&mp_plat_print, "<height=%u>\n", self->height);
-
     if (self->rd != MP_OBJ_NULL) {
         mp_hal_pin_obj_t rd_pin = mp_hal_get_pin_obj(self->rd);
         mp_hal_pin_output(rd_pin);
@@ -158,26 +155,16 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(parallelbus_i80_tx_param_obj, 2, 3, p
 STATIC mp_obj_t parallelbus_i80_tx_color(size_t n_args, const mp_obj_t *args_in)
 {
     parallelbus_i80_obj_t *self = MP_OBJ_TO_PTR(args_in[0]);
-    uint16_t *bitmap = NULL;
     int cmd = mp_obj_get_int(args_in[1]);
 
     if (n_args == 3) {
         mp_buffer_info_t bufinfo;
-        mp_get_buffer_raise(args_in[2], &bufinfo, MP_BUFFER_WRITE);
-        bitmap = (uint16_t *)m_malloc(bufinfo.len);
-        if (bitmap) {
-            memcpy((uint8_t *)bitmap, bufinfo.buf, bufinfo.len);
-            hal_parallelbus_i80_tx_color(self, cmd, bitmap, bufinfo.len);
-        } else {
-            hal_parallelbus_i80_tx_color(self, cmd, bufinfo.buf, bufinfo.len);
-        }
+        mp_get_buffer_raise(args_in[2], &bufinfo, MP_BUFFER_READ);
+        hal_parallelbus_i80_tx_color(self, cmd, bufinfo.buf, bufinfo.len);
     } else {
         hal_parallelbus_i80_tx_color(self, cmd, NULL, 0);
     }
 
-    if (bitmap) {
-        m_free(bitmap);
-    }
     gc_collect();
     return mp_const_none;
 }
