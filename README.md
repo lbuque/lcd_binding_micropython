@@ -1,4 +1,4 @@
-ST7789 Driver for MicroPython
+LCD Driver for MicroPython
 ------------------------------
 
 This driver is based on [esp_lcd](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/lcd.html).

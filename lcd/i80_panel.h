@@ -1,5 +1,5 @@
-#ifndef PARALLELBUS_I80_H_
-#define PARALLELBUS_I80_H_
+#ifndef LCD_I80_H_
+#define LCD_I80_H_
 
 #include "py/obj.h"
 #include "py/mphal.h"
@@ -7,7 +7,7 @@
 #include "esp_lcd_panel_io.h"
 #endif
 
-typedef struct parallelbus_i80_obj_t {
+typedef struct lcd_i80_obj_t {
     mp_obj_base_t base;
 
     uint16_t width;
@@ -19,7 +19,7 @@ typedef struct parallelbus_i80_obj_t {
     mp_obj_t rd;
     mp_obj_t reset;
     mp_obj_t cs;
-    mp_obj_t backlight;
+    // mp_obj_t backlight;
 
     mp_hal_pin_obj_t databus_pins[8];
     mp_hal_pin_obj_t dc_pin;
@@ -38,8 +38,8 @@ typedef struct parallelbus_i80_obj_t {
     esp_lcd_i80_bus_handle_t i80_bus;
     esp_lcd_panel_io_handle_t io_handle;
 #endif
-} parallelbus_i80_obj_t;
+} lcd_i80_obj_t;
 
-extern const mp_obj_type_t parallelbus_i80_type;
+extern const mp_obj_type_t lcd_i80_type;
 
 #endif

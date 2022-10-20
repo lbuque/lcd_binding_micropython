@@ -1,1 +1,0 @@
-extern const mp_obj_type_t st7789_ST7789_type;
