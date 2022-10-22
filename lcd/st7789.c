@@ -463,7 +463,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(lcd_st7789_rgb565_obj, 4, 4, lcd_st77
 
 
 STATIC const mp_rom_map_elem_t lcd_st7789_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_deinit),        MP_ROM_PTR(&lcd_st7789_deinit_obj)       },
+    { MP_ROM_QSTR(MP_QSTR_deinit),        MP_ROM_PTR(&lcd_st7789_deinit_obj)        },
     { MP_ROM_QSTR(MP_QSTR_reset),         MP_ROM_PTR(&lcd_st7789_reset_obj)         },
     { MP_ROM_QSTR(MP_QSTR_init),          MP_ROM_PTR(&lcd_st7789_init_obj)          },
     { MP_ROM_QSTR(MP_QSTR_bitmap),        MP_ROM_PTR(&lcd_st7789_bitmap_obj)        },
@@ -475,7 +475,7 @@ STATIC const mp_rom_map_elem_t lcd_st7789_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_backlight_on),  MP_ROM_PTR(&lcd_st7789_backlight_on_obj)  },
     { MP_ROM_QSTR(MP_QSTR_backlight_off), MP_ROM_PTR(&lcd_st7789_backlight_off_obj) },
     { MP_ROM_QSTR(MP_QSTR_color565),      MP_ROM_PTR(&lcd_st7789_rgb565_obj)        },
-    { MP_ROM_QSTR(MP_QSTR___del__),       MP_ROM_PTR(&lcd_st7789_deinit_obj)       },
+    { MP_ROM_QSTR(MP_QSTR___del__),       MP_ROM_PTR(&lcd_st7789_deinit_obj)        },
 
     { MP_ROM_QSTR(MP_QSTR_RGB),           MP_ROM_INT(COLOR_SPACE_RGB)               },
     { MP_ROM_QSTR(MP_QSTR_BGR),           MP_ROM_INT(COLOR_SPACE_BGR)               },

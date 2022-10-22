@@ -16,8 +16,11 @@ set(SRC
 if (CONFIG_IDF_TARGET_ESP32S3)
     LIST(APPEND SRC
                 ${CMAKE_CURRENT_LIST_DIR}/hal/esp32.c
+                ${CMAKE_CURRENT_LIST_DIR}/rgb_panel.c
     )
-    set(USE_ESP_LCD 1)
+    target_compile_definitions(usermod_lcd INTERFACE
+                                           USE_ESP_LCD=1
+    )
 else()
     LIST(APPEND SRC
                 ${CMAKE_CURRENT_LIST_DIR}/hal/soft8080.c

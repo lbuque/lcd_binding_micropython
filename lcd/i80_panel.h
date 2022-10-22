@@ -3,7 +3,7 @@
 
 #include "py/obj.h"
 #include "py/mphal.h"
-#if CONFIG_IDF_TARGET_ESP32S3
+#if USE_ESP_LCD
 #include "esp_lcd_panel_io.h"
 #endif
 
