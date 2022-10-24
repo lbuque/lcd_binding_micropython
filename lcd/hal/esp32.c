@@ -122,17 +122,15 @@ void hal_lcd_rgb_construct(lcd_rgb_obj_t *self) {
     };
     esp_err_t ret = esp_lcd_new_rgb_panel(&panel_config, &self->panel_handle);
     if (ret != 0) {
-        // printf("ret: %d\n", ret);
-        mp_raise_msg_varg(&mp_type_OSError, "esp_lcd_new_rgb_panel: %d", ret);
+        mp_raise_msg_varg(&mp_type_OSError, "%d(esp_lcd_new_rgb_panel)", ret);
     }
     ret = esp_lcd_panel_reset(self->panel_handle);
     if (ret != 0) {
-        // printf("ret: %d\n", ret);
-        mp_raise_msg_varg(&mp_type_OSError, "esp_lcd_panel_reset: %d", ret);
+        mp_raise_msg_varg(&mp_type_OSError, "%d(esp_lcd_panel_reset)", ret);
     }
     ret = esp_lcd_panel_init(self->panel_handle);
     if (ret != 0) {
-        mp_raise_msg_varg(&mp_type_OSError, "esp_lcd_panel_init: %d", ret);
+        mp_raise_msg_varg(&mp_type_OSError, "%d(esp_lcd_panel_init)", ret);
     }
 }
 

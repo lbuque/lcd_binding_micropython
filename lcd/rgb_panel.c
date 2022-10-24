@@ -17,9 +17,9 @@ STATIC void lcd_rgb_print(const mp_print_t *print, mp_obj_t self_in, mp_print_ki
     (void) kind;
     lcd_rgb_obj_t *self = MP_OBJ_TO_PTR(self_in);
     mp_printf(print, "<RGB pclk=%u, width=%u, height=%u>",
-              self->pclk,
-              self->width,
-              self->height);
+                     self->pclk,
+                     self->width,
+                     self->height);
 }
 
 
@@ -62,8 +62,7 @@ mp_obj_t lcd_rgb_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw,
     // data bus
     mp_obj_tuple_t *t = MP_OBJ_TO_PTR(args[ARG_data].u_obj);
     self->bus_width = t->len;
-    for (size_t i = 0; i < t->len; i++)
-    {
+    for (size_t i = 0; i < t->len; i++) {
         self->databus_obj[i] = t->items[i];
     }
 
@@ -269,6 +268,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(lcd_rgb_backlight_off_obj, lcd_rgb_backlight_of
 // STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(lcd_rgb_rgb565_obj, 4, 4, lcd_rgb_rgb565);
 #endif
 
+
 STATIC const mp_rom_map_elem_t lcd_rgb_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_deinit),        MP_ROM_PTR(&lcd_rgb_deinit_obj)        },
     { MP_ROM_QSTR(MP_QSTR_reset),         MP_ROM_PTR(&lcd_rgb_reset_obj)         },
@@ -285,7 +285,6 @@ STATIC const mp_rom_map_elem_t lcd_rgb_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR___del__),       MP_ROM_PTR(&lcd_rgb_deinit_obj)        },
 };
 STATIC MP_DEFINE_CONST_DICT(lcd_rgb_locals_dict, lcd_rgb_locals_dict_table);
-
 
 
 const mp_obj_type_t lcd_rgb_type = {
