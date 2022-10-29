@@ -2,7 +2,8 @@
 #define LCD_RGB_H_
 
 #include "py/obj.h"
-#include "py/mphal.h"
+// #include "py/mphal.h"
+#include "mphalport.h"
 #if USE_ESP_LCD
 #include "esp_lcd_panel_io.h"
 #endif

@@ -1,5 +1,7 @@
 #include "soft8080.h"
 
+#include "mphalport.h"
+
 #define DEBUG_printf(...)
 
 #define CS_LOW()                               \
@@ -29,9 +31,7 @@ STATIC void write_bus(lcd_i80_obj_t *self, const uint8_t *buf, int len)
 
     for (int i = 0; i < len; i++) {
         b = buf[i];
-
         if (b != last) {
-#if 1
             mp_hal_pin_write(self->databus_pins[7], (b >> 7) & 1);
             mp_hal_pin_write(self->databus_pins[6], (b >> 6) & 1);
             mp_hal_pin_write(self->databus_pins[5], (b >> 5) & 1);
@@ -40,16 +40,6 @@ STATIC void write_bus(lcd_i80_obj_t *self, const uint8_t *buf, int len)
             mp_hal_pin_write(self->databus_pins[2], (b >> 2) & 1);
             mp_hal_pin_write(self->databus_pins[1], (b >> 1) & 1);
             mp_hal_pin_write(self->databus_pins[0], b & 1);
-#else
-            mp_hal_pin_write(self->databus_pins[0], (b >> 7) & 1);
-            mp_hal_pin_write(self->databus_pins[1], (b >> 6) & 1);
-            mp_hal_pin_write(self->databus_pins[2], (b >> 5) & 1);
-            mp_hal_pin_write(self->databus_pins[3], (b >> 4) & 1);
-            mp_hal_pin_write(self->databus_pins[4], (b >> 3) & 1);
-            mp_hal_pin_write(self->databus_pins[5], (b >> 2) & 1);
-            mp_hal_pin_write(self->databus_pins[6], (b >> 1) & 1);
-            mp_hal_pin_write(self->databus_pins[7], b & 1);
-#endif
             last = b;
         }
         WR_LOW();
@@ -58,74 +48,81 @@ STATIC void write_bus(lcd_i80_obj_t *self, const uint8_t *buf, int len)
 }
 
 
-STATIC void write_color(lcd_i80_obj_t *self, const uint8_t *buf, int len)
+STATIC void write_color(mp_hal_pin_obj_t *databus, mp_hal_pin_obj_t wr, const uint8_t *buf, int len)
 {
     static int last = 0;
     uint8_t b;
 
     for (int i = 0; i < len / 2; i++) {
-        if (self->swap_color_bytes) {
-            b = buf[i * 2 + 1];
-        } else {
-            b = buf[i * 2];
-        }
-
+        b = buf[i * 2];
         if (b != last) {
-#if 1
-            mp_hal_pin_write(self->databus_pins[7], (b >> 7) & 1);
-            mp_hal_pin_write(self->databus_pins[6], (b >> 6) & 1);
-            mp_hal_pin_write(self->databus_pins[5], (b >> 5) & 1);
-            mp_hal_pin_write(self->databus_pins[4], (b >> 4) & 1);
-            mp_hal_pin_write(self->databus_pins[3], (b >> 3) & 1);
-            mp_hal_pin_write(self->databus_pins[2], (b >> 2) & 1);
-            mp_hal_pin_write(self->databus_pins[1], (b >> 1) & 1);
-            mp_hal_pin_write(self->databus_pins[0], b & 1);
-#else
-            mp_hal_pin_write(self->databus_pins[0], (b >> 7) & 1);
-            mp_hal_pin_write(self->databus_pins[1], (b >> 6) & 1);
-            mp_hal_pin_write(self->databus_pins[2], (b >> 5) & 1);
-            mp_hal_pin_write(self->databus_pins[3], (b >> 4) & 1);
-            mp_hal_pin_write(self->databus_pins[4], (b >> 3) & 1);
-            mp_hal_pin_write(self->databus_pins[5], (b >> 2) & 1);
-            mp_hal_pin_write(self->databus_pins[6], (b >> 1) & 1);
-            mp_hal_pin_write(self->databus_pins[7], b & 1);
-#endif
+            mp_hal_pin_write(databus[7], (b >> 7) & 1);
+            mp_hal_pin_write(databus[6], (b >> 6) & 1);
+            mp_hal_pin_write(databus[5], (b >> 5) & 1);
+            mp_hal_pin_write(databus[4], (b >> 4) & 1);
+            mp_hal_pin_write(databus[3], (b >> 3) & 1);
+            mp_hal_pin_write(databus[2], (b >> 2) & 1);
+            mp_hal_pin_write(databus[1], (b >> 1) & 1);
+            mp_hal_pin_write(databus[0], b & 1);
             last = b;
         }
-        WR_LOW();
-        WR_HIGH();
+        mp_hal_pin_write(wr, 0);
+        mp_hal_pin_write(wr, 1);
 
-        if (self->swap_color_bytes) {
-            b = buf[i * 2];
-        } else {
-            b = buf[i * 2 + 1];
-        }
-
+        b = buf[i * 2 + 1];
         if (b != last) {
-#if 1
-            mp_hal_pin_write(self->databus_pins[7], (b >> 7) & 1);
-            mp_hal_pin_write(self->databus_pins[6], (b >> 6) & 1);
-            mp_hal_pin_write(self->databus_pins[5], (b >> 5) & 1);
-            mp_hal_pin_write(self->databus_pins[4], (b >> 4) & 1);
-            mp_hal_pin_write(self->databus_pins[3], (b >> 3) & 1);
-            mp_hal_pin_write(self->databus_pins[2], (b >> 2) & 1);
-            mp_hal_pin_write(self->databus_pins[1], (b >> 1) & 1);
-            mp_hal_pin_write(self->databus_pins[0], b & 1);
-#else
-            mp_hal_pin_write(self->databus_pins[0], (b >> 7) & 1);
-            mp_hal_pin_write(self->databus_pins[1], (b >> 6) & 1);
-            mp_hal_pin_write(self->databus_pins[2], (b >> 5) & 1);
-            mp_hal_pin_write(self->databus_pins[3], (b >> 4) & 1);
-            mp_hal_pin_write(self->databus_pins[4], (b >> 3) & 1);
-            mp_hal_pin_write(self->databus_pins[5], (b >> 2) & 1);
-            mp_hal_pin_write(self->databus_pins[6], (b >> 1) & 1);
-            mp_hal_pin_write(self->databus_pins[7], b & 1);
-#endif
+            mp_hal_pin_write(databus[7], (b >> 7) & 1);
+            mp_hal_pin_write(databus[6], (b >> 6) & 1);
+            mp_hal_pin_write(databus[5], (b >> 5) & 1);
+            mp_hal_pin_write(databus[4], (b >> 4) & 1);
+            mp_hal_pin_write(databus[3], (b >> 3) & 1);
+            mp_hal_pin_write(databus[2], (b >> 2) & 1);
+            mp_hal_pin_write(databus[1], (b >> 1) & 1);
+            mp_hal_pin_write(databus[0], b & 1);
             last = b;
         }
-        WR_LOW();
-        WR_HIGH();
+        mp_hal_pin_write(wr, 0);
+        mp_hal_pin_write(wr, 1);
+    }
+}
 
+
+STATIC void write_color_swap_bytes(mp_hal_pin_obj_t *databus, mp_hal_pin_obj_t wr, const uint8_t *buf, int len)
+{
+    static int last = 0;
+    uint8_t b;
+
+    for (int i = 0; i < len / 2; i++) {
+        b = buf[i * 2 + 1];
+        if (b != last) {
+            mp_hal_pin_write(databus[7], (b >> 7) & 1);
+            mp_hal_pin_write(databus[6], (b >> 6) & 1);
+            mp_hal_pin_write(databus[5], (b >> 5) & 1);
+            mp_hal_pin_write(databus[4], (b >> 4) & 1);
+            mp_hal_pin_write(databus[3], (b >> 3) & 1);
+            mp_hal_pin_write(databus[2], (b >> 2) & 1);
+            mp_hal_pin_write(databus[1], (b >> 1) & 1);
+            mp_hal_pin_write(databus[0], b & 1);
+            last = b;
+        }
+        mp_hal_pin_write(wr, 0);
+        mp_hal_pin_write(wr, 1);
+
+        b = buf[i * 2];
+
+        if (b != last) {
+            mp_hal_pin_write(databus[7], (b >> 7) & 1);
+            mp_hal_pin_write(databus[6], (b >> 6) & 1);
+            mp_hal_pin_write(databus[5], (b >> 5) & 1);
+            mp_hal_pin_write(databus[4], (b >> 4) & 1);
+            mp_hal_pin_write(databus[3], (b >> 3) & 1);
+            mp_hal_pin_write(databus[2], (b >> 2) & 1);
+            mp_hal_pin_write(databus[1], (b >> 1) & 1);
+            mp_hal_pin_write(databus[0], b & 1);
+            last = b;
+        }
+        mp_hal_pin_write(wr, 0);
+        mp_hal_pin_write(wr, 1);
     }
 }
 
@@ -148,6 +145,12 @@ void hal_lcd_i80_construct(lcd_i80_obj_t *self) {
         mp_hal_pin_output(self->cs_pin);
     } else {
         self->cs_pin = -1;
+    }
+
+    if (self->swap_color_bytes) {
+        self->write_color = write_color_swap_bytes;
+    } else {
+        self->write_color = write_color;
     }
 
     CS_HIGH();
@@ -174,12 +177,10 @@ void hal_lcd_i80_tx_param(lcd_i80_obj_t *self, int lcd_cmd, const void *param, s
         write_bus(self, (uint8_t[]) {
             lcd_cmd & 0xFF
         }, 1);
-        DC_HIGH();
     }
-    if (param_size > 0) {
-        DC_HIGH();
-        write_bus(self, param, param_size);
-    }
+
+    DC_HIGH();
+    write_bus(self, param, param_size);
     CS_HIGH()
 }
 
@@ -192,12 +193,10 @@ void hal_lcd_i80_tx_color(lcd_i80_obj_t *self, int lcd_cmd, const void *color, s
         write_bus(self, (uint8_t[]) {
             lcd_cmd & 0xFF
         }, 1);
-        DC_HIGH();
     }
-    if (color_size > 0) {
-        DC_HIGH();
-        write_color(self, color, color_size);
-    }
+
+    DC_HIGH();
+    self->write_color(self->databus_pins, self->wr_pin, color, color_size);
     CS_HIGH()
 }
 

@@ -3,7 +3,8 @@
 
 #include "py/obj.h"
 #include "py/runtime.h"
-#include "py/mphal.h"
+// #include "py/mphal.h"
+#include "mphalport.h"
 #include "py/gc.h"
 
 #include <string.h>
@@ -17,9 +18,8 @@
 // this is the actual C-structure for our new object
 typedef struct lcd_st7789_obj_t {
     mp_obj_base_t base;
-    // mp_obj_base_t *spi_obj;
-
-    mp_obj_t bus_obj;
+    // mp_obj_t bus_obj;
+    mp_obj_base_t *bus_obj;
     mp_obj_t reset;
     mp_obj_t backlight;
     bool reset_level;
@@ -80,7 +80,8 @@ mp_obj_t lcd_st7789_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_
     lcd_st7789_obj_t *self = m_new_obj(lcd_st7789_obj_t);
     self->base.type           = &lcd_st7789_type;
 
-    self->bus_obj        = MP_OBJ_FROM_PTR(args[ARG_bus].u_obj);
+    self->bus_obj = (mp_obj_base_t *)MP_OBJ_TO_PTR(args[ARG_bus].u_obj);
+    // self->bus_obj        = MP_OBJ_FROM_PTR(args[ARG_bus].u_obj);
     self->reset          = args[ARG_reset].u_obj;
     self->backlight      = args[ARG_backlight].u_obj;
     self->reset_level    = args[ARG_reset_level].u_bool;
@@ -154,17 +155,12 @@ STATIC mp_obj_t lcd_st7789_reset(mp_obj_t self_in)
     if (self->reset != MP_OBJ_NULL) {
         mp_hal_pin_obj_t reset_pin = mp_hal_get_pin_obj(self->reset);
         mp_hal_pin_write(reset_pin, self->reset_level);
-        mp_hal_delay_ms(10);
+        mp_hal_delay_us(10 * 1000);
         mp_hal_pin_write(reset_pin, !self->reset_level);
-        mp_hal_delay_ms(10);
+        mp_hal_delay_us(10 * 1000);
     } else {
-        mp_obj_t args_out[1];
-        args_out[0] = mp_obj_new_int(0x01);
-        mp_call_method_self_n_kw(self->tx_param_method[0],
-                                 self->tx_param_method[1],
-                                 1,
-                                 0,
-                                 args_out);
+        mp_machine_i8080_p_t *i8080_p = (mp_machine_i8080_p_t *)self->bus_obj->type->protocol;
+        i8080_p->tx_param((lcd_i80_obj_t *)self->bus_obj, 0x01, NULL, 0);
     }
 
     return mp_const_none;
@@ -175,47 +171,21 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(lcd_st7789_reset_obj, lcd_st7789_reset);
 STATIC mp_obj_t lcd_st7789_init(mp_obj_t self_in)
 {
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_obj_t args_out[2];
+    mp_machine_i8080_p_t *i8080_p = (mp_machine_i8080_p_t *)self->bus_obj->type->protocol;
 
-    args_out[0] = mp_obj_new_int(0x11);
-    mp_call_method_self_n_kw(self->tx_param_method[0],
-                             self->tx_param_method[1],
-                             1,
-                             0,
-                             args_out);
-    mp_hal_delay_ms(100);
+    i8080_p->tx_param((lcd_i80_obj_t *)self->bus_obj, 0x11, NULL, 0);
+    mp_hal_delay_us(100 * 1000);
 
-    args_out[0] = mp_obj_new_int(0x36);
-    args_out[1] = mp_obj_new_bytes((uint8_t[]) {
+    i8080_p->tx_param((lcd_i80_obj_t *)self->bus_obj, 0x36, (uint8_t[]) {
         self->madctl_val,
     }, 1);
-    mp_call_method_self_n_kw(self->tx_param_method[0],
-                             self->tx_param_method[1],
-                             2,
-                             0,
-                             args_out);
-    m_del_obj(mp_obj_array_t, MP_OBJ_TO_PTR(args_out[1]));
-    gc_collect();
 
-    args_out[0] = mp_obj_new_int(0x3A);
-    args_out[1] = mp_obj_new_bytes((uint8_t[]) {
+    i8080_p->tx_param((lcd_i80_obj_t *)self->bus_obj, 0x3A, (uint8_t[]) {
         self->colmod_cal,
     }, 1);
-    mp_call_method_self_n_kw(self->tx_param_method[0],
-                             self->tx_param_method[1],
-                             2,
-                             0,
-                             args_out);
-    m_del_obj(mp_obj_array_t, MP_OBJ_TO_PTR(args_out[1]));
-    gc_collect();
 
     // turn on display
-    args_out[0] = mp_obj_new_int(0x29);
-    mp_call_method_self_n_kw(self->tx_param_method[0],
-                             self->tx_param_method[1],
-                             1,
-                             0,
-                             args_out);
+    i8080_p->tx_param((lcd_i80_obj_t *)self->bus_obj, 0x29, NULL, 0);
 
     return mp_const_none;
 }
@@ -225,7 +195,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(lcd_st7789_init_obj, lcd_st7789_init);
 STATIC mp_obj_t lcd_st7789_bitmap(size_t n_args, const mp_obj_t *args_in)
 {
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(args_in[0]);
-    mp_obj_t args_out[2];
+    // mp_obj_t args_out[2];
 
     int x_start = mp_obj_get_int(args_in[1]);
     int y_start = mp_obj_get_int(args_in[2]);
@@ -237,50 +207,26 @@ STATIC mp_obj_t lcd_st7789_bitmap(size_t n_args, const mp_obj_t *args_in)
     y_start += self->y_gap;
     y_end += self->y_gap;
 
-    args_out[0] = mp_obj_new_int(0x2A);
-    args_out[1] = mp_obj_new_bytes((uint8_t[]) {
+    mp_machine_i8080_p_t *i8080_p = (mp_machine_i8080_p_t *)self->bus_obj->type->protocol;
+
+    i8080_p->tx_param((lcd_i80_obj_t *)self->bus_obj, 0x2A, (uint8_t[]) {
         ((x_start >> 8) & 0xFF),
         (x_start & 0xFF),
         (((x_end - 1) >> 8) & 0xFF),
         ((x_end - 1) & 0xFF),
     }, 4);
-    mp_call_method_self_n_kw(self->tx_param_method[0],
-                             self->tx_param_method[1],
-                             2,
-                             0,
-                             args_out);
-    m_del_obj(mp_obj_array_t, MP_OBJ_TO_PTR(args_out[1]));
-    gc_collect();
-
-    args_out[0] = mp_obj_new_int(0x2B);
-    args_out[1] = mp_obj_new_bytes((uint8_t[]) {
+    i8080_p->tx_param((lcd_i80_obj_t *)self->bus_obj, 0x2B, (uint8_t[]) {
         ((y_start >> 8) & 0xFF),
         (y_start & 0xFF),
         (((y_end - 1) >> 8) & 0xFF),
         ((y_end - 1) & 0xFF),
     }, 4);
-    mp_call_method_self_n_kw(self->tx_param_method[0],
-                             self->tx_param_method[1],
-                             2,
-                             0,
-                             args_out);
-    m_del_obj(mp_obj_array_t, MP_OBJ_TO_PTR(args_out[1]));
-    gc_collect();
-
     mp_buffer_info_t bufinfo;
     mp_get_buffer_raise(args_in[5], &bufinfo, MP_BUFFER_READ);
+    size_t len = ((x_end - x_start) * (y_end - y_start) * self->bits_per_pixel / 8);
+    i8080_p->tx_color((lcd_i80_obj_t *)self->bus_obj, 0x2C, bufinfo.buf, len);
 
-    args_out[0] = mp_obj_new_int(0x2C);
-    // args_out[1] = mp_obj_new_bytearray_by_ref(((x_end - x_start) * (y_end - y_start) * self->bits_per_pixel / 8), bufinfo.buf);
-    args_out[1] = mp_obj_new_bytes(bufinfo.buf, ((x_end - x_start) * (y_end - y_start) * self->bits_per_pixel / 8));
-    mp_call_method_self_n_kw(self->tx_color_method[0],
-                             self->tx_color_method[1],
-                             2,
-                             0,
-                             args_out);
-    m_del_obj(mp_obj_array_t, MP_OBJ_TO_PTR(args_out[1]));
     gc_collect();
-
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(lcd_st7789_bitmap_obj, 6, 6, lcd_st7789_bitmap);
@@ -291,7 +237,7 @@ STATIC mp_obj_t lcd_st7789_mirror(mp_obj_t self_in,
                                      mp_obj_t mirror_y_in)
 {
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_obj_t args_out[2];
+    mp_machine_i8080_p_t *i8080_p = (mp_machine_i8080_p_t *)self->bus_obj->type->protocol;
 
     if (mp_obj_is_true(mirror_x_in)) {
         self->madctl_val |= (1 << 6);
@@ -304,17 +250,9 @@ STATIC mp_obj_t lcd_st7789_mirror(mp_obj_t self_in,
         self->madctl_val &= ~(1 << 7);
     }
 
-    args_out[0] = mp_obj_new_int(0x36);
-    args_out[1] = mp_obj_new_bytes((uint8_t[]) {
+    i8080_p->tx_param((lcd_i80_obj_t *)self->bus_obj, 0x36, (uint8_t[]) {
         self->madctl_val
     }, 1);
-    mp_call_method_self_n_kw(self->tx_param_method[0],
-                             self->tx_param_method[1],
-                             2,
-                             0,
-                             args_out);
-    m_del_obj(mp_obj_array_t, MP_OBJ_TO_PTR(args_out[1]));
-    gc_collect();
 
     return mp_const_none;
 }
@@ -324,8 +262,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(lcd_st7789_mirror_obj, lcd_st7789_mirror);
 STATIC mp_obj_t lcd_st7789_swap_xy(mp_obj_t self_in, mp_obj_t swap_axes_in)
 {
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
-
-    mp_obj_t args_out[2];
+    mp_machine_i8080_p_t *i8080_p = (mp_machine_i8080_p_t *)self->bus_obj->type->protocol;
 
     if (mp_obj_is_true(swap_axes_in)) {
         self->madctl_val |= 1 << 5;
@@ -333,17 +270,9 @@ STATIC mp_obj_t lcd_st7789_swap_xy(mp_obj_t self_in, mp_obj_t swap_axes_in)
         self->madctl_val &= ~(1 << 5);
     }
 
-    args_out[0] = mp_obj_new_int(0x36);
-    args_out[1] = mp_obj_new_bytes((uint8_t[]) {
+    i8080_p->tx_param((lcd_i80_obj_t *)self->bus_obj, 0x36, (uint8_t[]) {
         self->madctl_val
     }, 1);
-    mp_call_method_self_n_kw(self->tx_param_method[0],
-                             self->tx_param_method[1],
-                             2,
-                             0,
-                             args_out);
-    m_del_obj(mp_obj_array_t, MP_OBJ_TO_PTR(args_out[1]));
-    gc_collect();
 
     return mp_const_none;
 }
@@ -365,19 +294,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(lcd_st7789_set_gap_obj, lcd_st7789_set_gap);
 STATIC mp_obj_t lcd_st7789_invert_color(mp_obj_t self_in, mp_obj_t invert_in)
 {
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_obj_t args_out[1];
+    mp_machine_i8080_p_t *i8080_p = (mp_machine_i8080_p_t *)self->bus_obj->type->protocol;
 
     if (mp_obj_is_true(invert_in)) {
-        args_out[0] = mp_obj_new_int(0x21);
+        i8080_p->tx_param((lcd_i80_obj_t *)self->bus_obj, 0x21, NULL, 0);
     } else {
-        args_out[0] = mp_obj_new_int(0x20);
+        i8080_p->tx_param((lcd_i80_obj_t *)self->bus_obj, 0x20, NULL, 0);
     }
-
-    mp_call_method_self_n_kw(self->tx_param_method[0],
-                             self->tx_param_method[1],
-                             1,
-                             0,
-                             args_out);
 
     return mp_const_none;
 }
@@ -387,19 +310,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(lcd_st7789_invert_color_obj, lcd_st7789_invert_
 STATIC mp_obj_t lcd_st7789_disp_off(mp_obj_t self_in, mp_obj_t off_in)
 {
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_obj_t args_out[1];
+    mp_machine_i8080_p_t *i8080_p = (mp_machine_i8080_p_t *)self->bus_obj->type->protocol;
 
     if (mp_obj_is_true(off_in)) {
-        args_out[0] = mp_obj_new_int(0x28);
+        i8080_p->tx_param((lcd_i80_obj_t *)self->bus_obj, 0x28, NULL, 0);
     } else {
-        args_out[0] = mp_obj_new_int(0x29);
+        i8080_p->tx_param((lcd_i80_obj_t *)self->bus_obj, 0x29, NULL, 0);
     }
-
-    mp_call_method_self_n_kw(self->tx_param_method[0],
-                             self->tx_param_method[1],
-                             1,
-                             0,
-                             args_out);
 
     return mp_const_none;
 }
@@ -413,7 +330,7 @@ STATIC mp_obj_t lcd_st7789_backlight_on(mp_obj_t self_in)
     if (self->backlight != MP_OBJ_NULL) {
         mp_hal_pin_obj_t backlight_pin = mp_hal_get_pin_obj(self->backlight);
         mp_hal_pin_write(backlight_pin, 1);
-        mp_hal_delay_ms(10);
+        mp_hal_delay_us(10 * 1000);
     }
 
     return mp_const_none;
@@ -428,7 +345,7 @@ STATIC mp_obj_t lcd_st7789_backlight_off(mp_obj_t self_in)
     if (self->backlight != MP_OBJ_NULL) {
         mp_hal_pin_obj_t backlight_pin = mp_hal_get_pin_obj(self->backlight);
         mp_hal_pin_write(backlight_pin, 0);
-        mp_hal_delay_ms(10);
+        mp_hal_delay_us(10 * 1000);
     }
 
     return mp_const_none;

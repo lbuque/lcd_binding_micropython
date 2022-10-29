@@ -27,8 +27,10 @@ void hal_lcd_i80_construct(lcd_i80_obj_t *self) {
         .bus_width = self->bus_width,
         .max_transfer_bytes = self->width * self->height * sizeof(uint16_t)
     };
-    ESP_ERROR_CHECK(esp_lcd_new_i80_bus(&bus_config, &self->i80_bus));
-
+    esp_err_t ret = esp_lcd_new_i80_bus(&bus_config, &self->i80_bus);
+    if (ret != 0) {
+        mp_raise_msg_varg(&mp_type_OSError, "%d(esp_lcd_new_i80_bus)", ret);
+    }
     esp_lcd_panel_io_i80_config_t io_config = {
         .pclk_hz = self->pclk,
         .trans_queue_depth = 10,
@@ -49,7 +51,10 @@ void hal_lcd_i80_construct(lcd_i80_obj_t *self) {
     } else {
         io_config.cs_gpio_num = -1;
     }
-    ESP_ERROR_CHECK(esp_lcd_new_panel_io_i80(self->i80_bus, &io_config, &self->io_handle));
+    ret = esp_lcd_new_panel_io_i80(self->i80_bus, &io_config, &self->io_handle);
+    if (ret != 0) {
+        mp_raise_msg_varg(&mp_type_OSError, "%d(esp_lcd_new_panel_io_i80)", ret);
+    }
 }
 
 

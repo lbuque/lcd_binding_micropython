@@ -6,9 +6,11 @@
 #include "hal/soft8080.h"
 #endif
 
+#include "mphalport.h"
+
 #include "py/obj.h"
 #include "py/runtime.h"
-#include "py/mphal.h"
+// #include "py/mphal.h"
 #include "py/gc.h"
 
 #include <string.h>
@@ -151,10 +153,17 @@ STATIC const mp_rom_map_elem_t lcd_i80_locals_dict_table[] = {
 STATIC MP_DEFINE_CONST_DICT(lcd_i80_locals_dict, lcd_i80_locals_dict_table);
 
 
+STATIC const mp_machine_i8080_p_t mp_machine_i8080_p = {
+    .tx_param = hal_lcd_i80_tx_param,
+    .tx_color = hal_lcd_i80_tx_color
+};
+
+
 const mp_obj_type_t lcd_i80_type = {
     { &mp_type_type },
     .name = MP_QSTR_I8080,
     .print = lcd_i80_print,
     .make_new = lcd_i80_make_new,
+    .protocol = &mp_machine_i8080_p,
     .locals_dict = (mp_obj_dict_t *)&lcd_i80_locals_dict,
 };
