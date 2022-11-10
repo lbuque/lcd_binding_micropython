@@ -219,7 +219,7 @@ STATIC mp_obj_t lcd_rgb_backlight_on(mp_obj_t self_in)
     if (self->backlight != MP_OBJ_NULL) {
         mp_hal_pin_obj_t backlight_pin = mp_hal_get_pin_obj(self->backlight);
         mp_hal_pin_write(backlight_pin, 1);
-        mp_hal_delay_ms(10);
+        mp_hal_delay_us(10 * 1000);
     }
 
     return mp_const_none;
@@ -234,7 +234,7 @@ STATIC mp_obj_t lcd_rgb_backlight_off(mp_obj_t self_in)
     if (self->backlight != MP_OBJ_NULL) {
         mp_hal_pin_obj_t backlight_pin = mp_hal_get_pin_obj(self->backlight);
         mp_hal_pin_write(backlight_pin, 0);
-        mp_hal_delay_ms(10);
+        mp_hal_delay_us(10 * 1000);
     }
 
     return mp_const_none;

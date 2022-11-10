@@ -15,6 +15,15 @@
 #define COLOR_SPACE_MONOCHROME (2)
 
 
+typedef struct _st7789_rotation_t {
+    uint8_t madctl;
+    uint16_t width;
+    uint16_t height;
+    uint16_t colstart;
+    uint16_t rowstart;
+} st7789_rotation_t;
+
+
 // this is the actual C-structure for our new object
 typedef struct lcd_st7789_obj_t {
     mp_obj_base_t base;
@@ -28,6 +37,10 @@ typedef struct lcd_st7789_obj_t {
     mp_obj_t tx_param_method[2];
     mp_obj_t tx_color_method[2];
 
+    uint16_t width;
+    uint16_t height;
+    uint8_t rotation;
+    const st7789_rotation_t *rotations;   // list of rotation tuples [(madctl, colstart, rowstart)]
     int x_gap;
     int y_gap;
     uint32_t bits_per_pixel;
@@ -36,11 +49,82 @@ typedef struct lcd_st7789_obj_t {
 } lcd_st7789_obj_t;
 
 
-const char* color_space_string[] = {
+//
+// Default st7789 and st7735 display orientation tables
+// can be overridden during init(), madctl values
+// will be combined with color_mode
+//
+
+//{ madctl, width, height, colstart, rowstart }
+
+STATIC const st7789_rotation_t ORIENTATIONS_240x320[4] = {
+    { 0x00, 240, 320, 0, 0},
+    { 0x60, 320, 240, 0, 0},
+    { 0xc0, 240, 320, 0, 0},
+    { 0xa0, 320, 240, 0, 0}
+};
+
+STATIC const st7789_rotation_t ORIENTATIONS_170x320[4] = {
+    {0x00, 170, 320, 35, 0},
+    {0x60, 320, 170, 0, 35},
+    {0xc0, 170, 320, 35, 0},
+    {0xa0, 320, 170, 0, 35}
+};
+
+STATIC const st7789_rotation_t ORIENTATIONS_240x240[4] = {
+    {0x00, 240, 240,  0,  0},
+    {0x60, 240, 240,  0,  0},
+    {0xc0, 240, 240,  0, 80},
+    {0xa0, 240, 240, 80,  0}
+};
+
+STATIC const st7789_rotation_t ORIENTATIONS_135x240[4] = {
+    {0x00, 135, 240, 52, 40},
+    {0x60, 240, 135, 40, 53},
+    {0xc0, 135, 240, 53, 40},
+    {0xa0, 240, 135, 40, 52}
+};
+
+STATIC const st7789_rotation_t ORIENTATIONS_128x160[4] = {
+    {0x00, 128, 160, 0, 0},
+    {0x60, 160, 128, 0, 0},
+    {0xc0, 128, 160, 0, 0},
+    {0xa0, 160, 128, 0, 0}
+};
+
+STATIC const st7789_rotation_t ORIENTATIONS_128x128[4] = {
+    {0x00, 128, 128, 2, 1},
+    {0x60, 128, 128, 1, 2},
+    {0xc0, 128, 128, 2, 3},
+    {0xa0, 128, 128, 3, 2}
+};
+
+
+STATIC const char* color_space_description[] = {
     "RGB",
     "BGR",
     "MONOCHROME"
 };
+
+
+STATIC void set_rotation(lcd_st7789_obj_t *self, uint8_t rotation)
+{
+    mp_machine_i8080_p_t *i8080_p = (mp_machine_i8080_p_t *)self->bus_obj->type->protocol;
+
+    if (self->rotations != NULL) {
+        self->madctl_val |= self->rotations[rotation].madctl;
+        i8080_p->tx_param((lcd_i80_obj_t *)self->bus_obj, 0x36, (uint8_t[]) {
+            self->madctl_val,
+        }, 1);
+        self->width = self->rotations[rotation].width;
+        self->height = self->rotations[rotation].height;
+        self->x_gap = self->rotations[rotation].colstart;
+        self->y_gap = self->rotations[rotation].rowstart;
+    } else {
+        mp_warning(NULL, "rotation method is not supported");
+        mp_warning(NULL, "Please use mirror method and swap_xy method to rotate the screen");
+    }
+}
 
 
 STATIC void lcd_st7789_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind)
@@ -50,7 +134,7 @@ STATIC void lcd_st7789_print(const mp_print_t *print, mp_obj_t self_in, mp_print
     mp_printf(print, "<ST7789 bus=%p, reset=%p, color_space=%s, bits_per_pixel=%u>",
               self->bus_obj,
               self->reset,
-              color_space_string[self->color_space],
+              color_space_description[self->color_space],
               self->bits_per_pixel);
 }
 
@@ -103,8 +187,30 @@ mp_obj_t lcd_st7789_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_
     mp_load_method_maybe(self->bus_obj, MP_QSTR_tx_param, self->tx_param_method);
     mp_load_method_maybe(self->bus_obj, MP_QSTR_tx_color, self->tx_color_method);
 
-    switch (self->color_space)
-    {
+    self->width = ((lcd_i80_obj_t *)self->bus_obj)->width;
+    self->height = ((lcd_i80_obj_t *)self->bus_obj)->height;
+
+    if ((self->width == 240 && self->height == 320) || \
+        (self->width == 320 && self->height == 240)) {
+        self->rotations = ORIENTATIONS_240x320;
+    } else if ((self->width == 170 && self->height == 320) || \
+               (self->width == 320 && self->height == 170)) {
+        self->rotations = ORIENTATIONS_170x320;
+    } else if (self->width == 240 && self->height == 240) {
+        self->rotations = ORIENTATIONS_240x240;
+    } else if ((self->width == 135 && self->height == 240) ||
+               (self->width == 240 && self->height == 135)) {
+        self->rotations = ORIENTATIONS_135x240;
+    } else if ((self->width == 128 && self->height == 160) || \
+               (self->width == 160 && self->height == 128)) {
+        self->rotations = ORIENTATIONS_128x160;
+    } else if (self->width == 128 && self->height == 128) {
+        self->rotations = ORIENTATIONS_128x128;
+    } else {
+        mp_warning(NULL, "rotation parameter not detected");
+    }
+
+    switch (self->color_space) {
         case COLOR_SPACE_RGB:
             self->madctl_val = 0;
         break;
@@ -114,8 +220,7 @@ mp_obj_t lcd_st7789_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_
         break;
 
         default:
-            mp_raise_msg_varg(&mp_type_ValueError,
-                              MP_ERROR_TEXT("unsupported color space"));
+            mp_raise_ValueError(MP_ERROR_TEXT("unsupported color space"));
         break;
     }
 
@@ -130,11 +235,10 @@ mp_obj_t lcd_st7789_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_
         break;
 
         default:
-            mp_raise_msg_varg(&mp_type_ValueError,
-                              MP_ERROR_TEXT("unsupported pixel width"));
+            mp_raise_ValueError(MP_ERROR_TEXT("unsupported pixel width"));
         break;
     }
-
+    set_rotation(self, 0);
     return MP_OBJ_FROM_PTR(self);
 }
 
@@ -353,7 +457,7 @@ STATIC mp_obj_t lcd_st7789_backlight_off(mp_obj_t self_in)
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(lcd_st7789_backlight_off_obj, lcd_st7789_backlight_off);
 
 
-STATIC mp_obj_t lcd_st7789_rgb565(size_t n_args, const mp_obj_t *args_in)
+STATIC mp_obj_t lcd_st7789_color565(size_t n_args, const mp_obj_t *args_in)
 {
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(args_in[0]);
     lcd_i80_obj_t *i8080_obj = MP_OBJ_TO_PTR(self->bus_obj);
@@ -376,7 +480,33 @@ STATIC mp_obj_t lcd_st7789_rgb565(size_t n_args, const mp_obj_t *args_in)
 
     return MP_OBJ_NEW_SMALL_INT(color);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(lcd_st7789_rgb565_obj, 4, 4, lcd_st7789_rgb565);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(lcd_st7789_color565_obj, 4, 4, lcd_st7789_color565);
+
+
+STATIC mp_obj_t lcd_st7789_width(mp_obj_t self_in)
+{
+    lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    return mp_obj_new_int(self->width);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(lcd_st7789_width_obj, lcd_st7789_width);
+
+
+STATIC mp_obj_t lcd_st7789_height(mp_obj_t self_in)
+{
+    lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    return mp_obj_new_int(self->height);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(lcd_st7789_height_obj, lcd_st7789_height);
+
+
+STATIC mp_obj_t lcd_st7789_rotation(mp_obj_t self_in, mp_obj_t rotation_in)
+{
+    lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    self->rotation = mp_obj_get_int(rotation_in) % 4;
+    set_rotation(self, self->rotation);
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(lcd_st7789_rotation_obj, lcd_st7789_rotation);
 
 
 STATIC const mp_rom_map_elem_t lcd_st7789_locals_dict_table[] = {
@@ -391,7 +521,10 @@ STATIC const mp_rom_map_elem_t lcd_st7789_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_disp_off),      MP_ROM_PTR(&lcd_st7789_disp_off_obj)      },
     { MP_ROM_QSTR(MP_QSTR_backlight_on),  MP_ROM_PTR(&lcd_st7789_backlight_on_obj)  },
     { MP_ROM_QSTR(MP_QSTR_backlight_off), MP_ROM_PTR(&lcd_st7789_backlight_off_obj) },
-    { MP_ROM_QSTR(MP_QSTR_color565),      MP_ROM_PTR(&lcd_st7789_rgb565_obj)        },
+    { MP_ROM_QSTR(MP_QSTR_color565),      MP_ROM_PTR(&lcd_st7789_color565_obj)      },
+    { MP_ROM_QSTR(MP_QSTR_height),        MP_ROM_PTR(&lcd_st7789_height_obj)        },
+    { MP_ROM_QSTR(MP_QSTR_width),         MP_ROM_PTR(&lcd_st7789_width_obj)         },
+    { MP_ROM_QSTR(MP_QSTR_rotation),      MP_ROM_PTR(&lcd_st7789_rotation_obj)      },
     { MP_ROM_QSTR(MP_QSTR___del__),       MP_ROM_PTR(&lcd_st7789_deinit_obj)        },
 
     { MP_ROM_QSTR(MP_QSTR_RGB),           MP_ROM_INT(COLOR_SPACE_RGB)               },
