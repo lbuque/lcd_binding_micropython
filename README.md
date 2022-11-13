@@ -3,8 +3,10 @@ LCD Driver for MicroPython
 
 Contents:
 
+- [LCD Driver for MicroPython](#lcd-driver-for-micropython)
 - [Introduction](#introduction)
 - [Features](#features)
+- [Documentation](#documentation)
 - [References](#references)
 - [Future plans](#future-plans)
 
@@ -26,6 +28,10 @@ Supported boards：
 - [LILYGO T-DisplayS3](https://github.com/Xinyuan-LilyGO/T-Display-S3)
 - [LILYGO T-RGB](https://github.com/Xinyuan-LilyGO/T-RGB)
 
+## Documentation
+
+API documentation for this library can be found on [Read the Docs](https://lcd-binding-micropython.readthedocs.io/en/latest/).
+
 ## References
 
 - [st7789s3_mpy](https://github.com/russhughes/st7789s3_mpy)
@@ -33,4 +39,4 @@ Supported boards：
 ## Future plans
 
 - [ ] ST7735
-- [ ] api documentation
+- [x] api documentation (2022/11/13)
