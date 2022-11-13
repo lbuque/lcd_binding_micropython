@@ -81,8 +81,8 @@ void hal_lcd_rgb_construct(lcd_rgb_obj_t *self) {
         .clk_src = LCD_CLK_SRC_PLL160M,
         .timings = {
             .pclk_hz = self->pclk,
-            .h_res = self->height,
-            .v_res = self->width,
+            .h_res = self->width,
+            .v_res = self->height,
             // The following parameters should refer to LCD spec
             .hsync_pulse_width = self->timings.hsync_pulse_width,
             .hsync_back_porch  = self->timings.hsync_back_porch,
