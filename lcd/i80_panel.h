@@ -3,7 +3,6 @@
 
 #include "mphalport.h"
 #include "py/obj.h"
-// #include "py/mphal.h"
 #if USE_ESP_LCD
 #include "esp_lcd_panel_io.h"
 #endif

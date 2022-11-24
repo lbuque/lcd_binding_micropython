@@ -3,28 +3,21 @@
 add_library(usermod_lcd INTERFACE)
 
 # Add our source files to the lib
-set(SRC
-    ${CMAKE_CURRENT_LIST_DIR}/modlcd.c
-    ${CMAKE_CURRENT_LIST_DIR}/st7789.c
-    ${CMAKE_CURRENT_LIST_DIR}/i80_panel.c
+set(SRC ${CMAKE_CURRENT_LIST_DIR}/modlcd.c
+        ${CMAKE_CURRENT_LIST_DIR}/st7789.c
+        ${CMAKE_CURRENT_LIST_DIR}/i80_panel.c
+        ${CMAKE_CURRENT_LIST_DIR}/spi_panel.c
 )
 
-# LIST(APPEND SRC
-#             ${CMAKE_CURRENT_LIST_DIR}/hal/soft8080.c
-# )
-
-if (CONFIG_IDF_TARGET_ESP32S3)
-    LIST(APPEND SRC
-                ${CMAKE_CURRENT_LIST_DIR}/hal/esp32.c
-                ${CMAKE_CURRENT_LIST_DIR}/rgb_panel.c
-    )
-    target_compile_definitions(usermod_lcd INTERFACE
-                                           USE_ESP_LCD=1
-    )
+if (CONFIG_IDF_TARGET_ESP32 OR CONFIG_IDF_TARGET_ESP32S3)
+    LIST(APPEND SRC ${CMAKE_CURRENT_LIST_DIR}/hal/esp32.c)
+    target_compile_definitions(usermod_lcd INTERFACE USE_ESP_LCD=1)
+    if (CONFIG_IDF_TARGET_ESP32S3)
+        LIST(APPEND SRC ${CMAKE_CURRENT_LIST_DIR}/rgb_panel.c)
+        target_compile_definitions(usermod_lcd INTERFACE RGB_LCD_SUPPORTED=1)
+    endif()
 else()
-    LIST(APPEND SRC
-                ${CMAKE_CURRENT_LIST_DIR}/hal/soft8080.c
-    )
+    LIST(APPEND SRC ${CMAKE_CURRENT_LIST_DIR}/hal/soft8080.c)
 endif()
 
 target_sources(usermod_lcd INTERFACE ${SRC})
