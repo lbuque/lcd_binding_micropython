@@ -27,11 +27,12 @@ def cycle(p):
 
 def main():
     colors = cycle([0xe000, 0xece0, 0xe7e0, 0x5e0, 0x00d3, 0x7030])
+    # colors = cycle([0x00e0, 0xe0ec, 0xe0e7, 0x005e, 0xd300, 0x3070])
     foreground = next(colors)
     background = 0x0000
 
     tft = tft_config.config()
-    tft.rotation(2)
+    tft.rotation(0)
 
     '''The font height of the framebuf is 8 pixels.'''
     font_height = const(8)
@@ -62,8 +63,8 @@ def main():
 
         '''Write new line when we have scrolled the height of a character'''
         if scroll % font_height == 0:
-            line = (height - scroll) % height
-            # line = (scroll + last_line) % height
+            # line = (height - scroll) % height
+            line = (scroll + last_line) % height
             fbuf.fill(background)
             '''write character hex value as a string'''
             fbuf.text(

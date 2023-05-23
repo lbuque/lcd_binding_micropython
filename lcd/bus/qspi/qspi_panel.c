@@ -160,6 +160,17 @@ STATIC const mp_lcd_panel_p_t mp_lcd_panel_p = {
 };
 
 
+#ifdef MP_OBJ_TYPE_GET_SLOT
+MP_DEFINE_CONST_OBJ_TYPE(
+    mp_lcd_qspi_panel_type,
+    MP_QSTR_QSPI_Panel,
+    MP_TYPE_FLAG_NONE,
+    print, mp_lcd_qspi_panel_print,
+    make_new, mp_lcd_qspi_panel_make_new,
+    protocol, &mp_lcd_panel_p,
+    locals_dict, (mp_obj_dict_t *)&mp_lcd_qspi_panel_locals_dict
+);
+#else
 const mp_obj_type_t mp_lcd_qspi_panel_type = {
     { &mp_type_type },
     .name = MP_QSTR_QSPI_Panel,
@@ -168,3 +179,4 @@ const mp_obj_type_t mp_lcd_qspi_panel_type = {
     .protocol = &mp_lcd_panel_p,
     .locals_dict = (mp_obj_dict_t *)&mp_lcd_qspi_panel_locals_dict,
 };
+#endif

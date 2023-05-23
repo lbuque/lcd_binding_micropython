@@ -110,7 +110,11 @@ mp_obj_t mp_lcd_rm67162_make_new(const mp_obj_type_t *type,
     self->base.type = &mp_lcd_rm67162_type;
 
     self->bus_obj = (mp_obj_base_t *)MP_OBJ_TO_PTR(args[ARG_bus].u_obj);
+#ifdef MP_OBJ_TYPE_GET_SLOT
+    self->lcd_panel_p = (mp_lcd_panel_p_t *)MP_OBJ_TYPE_GET_SLOT(self->bus_obj->type, protocol);
+#else
     self->lcd_panel_p = (mp_lcd_panel_p_t *)self->bus_obj->type->protocol;
+#endif
 
     self->width = ((mp_lcd_qspi_panel_obj_t *)self->bus_obj)->width;
     self->height = ((mp_lcd_qspi_panel_obj_t *)self->bus_obj)->height;
@@ -598,6 +602,16 @@ STATIC const mp_rom_map_elem_t mp_lcd_rm67162_locals_dict_table[] = {
 STATIC MP_DEFINE_CONST_DICT(mp_lcd_rm67162_locals_dict, mp_lcd_rm67162_locals_dict_table);
 
 
+#ifdef MP_OBJ_TYPE_GET_SLOT
+MP_DEFINE_CONST_OBJ_TYPE(
+    mp_lcd_rm67162_type,
+    MP_QSTR_RM67162,
+    MP_TYPE_FLAG_NONE,
+    print, mp_lcd_rm67162_print,
+    make_new, mp_lcd_rm67162_make_new,
+    locals_dict, (mp_obj_dict_t *)&mp_lcd_rm67162_locals_dict
+);
+#else
 const mp_obj_type_t mp_lcd_rm67162_type = {
     { &mp_type_type },
     .name        = MP_QSTR_RM67162,
@@ -605,3 +619,4 @@ const mp_obj_type_t mp_lcd_rm67162_type = {
     .make_new    = mp_lcd_rm67162_make_new,
     .locals_dict = (mp_obj_dict_t *)&mp_lcd_rm67162_locals_dict,
 };
+#endif
