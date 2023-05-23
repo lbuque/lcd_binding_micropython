@@ -10,7 +10,6 @@
 
 #include "py/obj.h"
 #include "py/runtime.h"
-// #include "py/mphal.h"
 #include "py/gc.h"
 
 #include <string.h>

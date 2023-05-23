@@ -7,7 +7,6 @@
 #include "py/obj.h"
 #include "py/runtime.h"
 
-// #include "py/mphal.h"
 #include "mphalport.h"
 #include "py/gc.h"
 

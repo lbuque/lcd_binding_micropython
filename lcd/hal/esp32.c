@@ -5,9 +5,64 @@
 #include "esp_lcd_panel_ops.h"
 #include "esp_lcd_panel_rgb.h"
 
+#include "machine_hw_spi.c"
 #include "py/runtime.h"
 
-#define DEBUG_printf(...)
+#define DEBUG_printf(...) // mp_printf(&mp_plat_print, __VA_ARGS__);
+
+void hal_lcd_spi_panel_construct(lcd_spi_panel_obj_t *self) {
+    machine_hw_spi_obj_t *spi_obj = ((machine_hw_spi_obj_t *)self->spi_obj);
+    // if (spi_obj == NULL) {
+    //     mp_raise_msg_varg(&mp_type_OSError, "null");
+    // }
+    // machine_hw_spi_deinit_internal(spi_obj);
+    // spi_bus_config_t buscfg = {
+    //     .sclk_io_num = spi_obj->sck,
+    //     .mosi_io_num = spi_obj->mosi,
+    //     .miso_io_num = -1,
+    //     .quadwp_io_num = -1,
+    //     .quadhd_io_num = -1,
+    //     .max_transfer_sz = self->width * self->height * 2 + 8
+    // };
+    // esp_err_t ret = spi_bus_initialize(spi_obj->host, &buscfg, SPI_DMA_CH_AUTO);
+    // if (ret != 0) {
+    //     mp_raise_msg_varg(&mp_type_OSError, "%d(spi_bus_initialize)", ret);
+    // }
+
+    esp_lcd_panel_io_spi_config_t io_config = {
+        .dc_gpio_num = mp_hal_get_pin_obj(self->dc),
+        .cs_gpio_num = mp_hal_get_pin_obj(self->cs),
+        .pclk_hz = self->pclk,
+        .lcd_cmd_bits = self->cmd_bits,
+        .lcd_param_bits = self->param_bits,
+        .spi_mode = 0,
+        .trans_queue_depth = 4,
+    };
+
+    // Attach the LCD to the SPI bus
+    esp_err_t ret = esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)spi_obj->host, &io_config, &self->io_handle);
+    if (ret != 0) {
+        mp_raise_msg_varg(&mp_type_OSError, "%d(esp_lcd_new_panel_io_spi)", ret);
+    }
+}
+
+
+inline void hal_lcd_spi_panel_tx_param(lcd_spi_panel_obj_t *self, int lcd_cmd, const void *param, size_t param_size) {
+    DEBUG_printf("tx_param cmd: %x, param_size: %u\n", lcd_cmd, param_size);
+    esp_lcd_panel_io_tx_param(self->io_handle, lcd_cmd, param, param_size);
+}
+
+
+inline void hal_lcd_spi_panel_tx_color(lcd_spi_panel_obj_t *self, int lcd_cmd, const void *color, size_t color_size) {
+    DEBUG_printf("tx_color cmd: %x, color_size: %u\n", lcd_cmd, color_size);
+    esp_lcd_panel_io_tx_color(self->io_handle, lcd_cmd, color, color_size);
+}
+
+
+inline void hal_lcd_spi_panel_deinit(lcd_spi_panel_obj_t *self) {
+    esp_lcd_panel_io_del(self->io_handle);
+}
+
 
 void hal_lcd_i80_construct(lcd_i80_obj_t *self) {
     esp_lcd_i80_bus_config_t bus_config = {
@@ -58,24 +113,25 @@ void hal_lcd_i80_construct(lcd_i80_obj_t *self) {
 }
 
 
-void hal_lcd_i80_tx_param(lcd_i80_obj_t *self, int lcd_cmd, const void *param, size_t param_size) {
+inline void hal_lcd_i80_tx_param(lcd_i80_obj_t *self, int lcd_cmd, const void *param, size_t param_size) {
     DEBUG_printf("tx_param cmd: %x, param_size: %u\n", lcd_cmd, param_size);
     esp_lcd_panel_io_tx_param(self->io_handle, lcd_cmd, param, param_size);
 }
 
 
-void hal_lcd_i80_tx_color(lcd_i80_obj_t *self, int lcd_cmd, const void *color, size_t color_size) {
+inline void hal_lcd_i80_tx_color(lcd_i80_obj_t *self, int lcd_cmd, const void *color, size_t color_size) {
     DEBUG_printf("tx_color cmd: %x, color_size: %u\n", lcd_cmd, color_size);
     esp_lcd_panel_io_tx_color(self->io_handle, lcd_cmd, color, color_size);
 }
 
 
-void hal_lcd_i80_deinit(lcd_i80_obj_t *self) {
+inline void hal_lcd_i80_deinit(lcd_i80_obj_t *self) {
     esp_lcd_panel_io_del(self->io_handle);
     esp_lcd_del_i80_bus(self->i80_bus);
 }
 
 
+#if RGB_LCD_SUPPORTED
 void hal_lcd_rgb_construct(lcd_rgb_obj_t *self) {
     esp_lcd_rgb_panel_config_t panel_config = {
         .clk_src = LCD_CLK_SRC_PLL160M,
@@ -183,3 +239,4 @@ inline void hal_lcd_rgb_invert_color(lcd_rgb_obj_t *self, bool invert_color_data
 inline void hal_lcd_rgb_disp_off(lcd_rgb_obj_t *self, bool off) {
     esp_lcd_panel_disp_off(self->panel_handle, off);
 }
+#endif

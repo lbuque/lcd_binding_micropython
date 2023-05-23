@@ -1,7 +1,17 @@
 #ifndef _ESP32_H_
 #define _ESP32_H_
+#include "spi_panel.h"
 #include "i80_panel.h"
 #include "rgb_panel.h"
+
+// spi
+void hal_lcd_spi_panel_construct(lcd_spi_panel_obj_t *self);
+
+void hal_lcd_spi_panel_tx_param(lcd_spi_panel_obj_t *self, int lcd_cmd, const void *param, size_t param_size);
+
+void hal_lcd_spi_panel_tx_color(lcd_spi_panel_obj_t *self, int lcd_cmd, const void *color, size_t color_size);
+
+void hal_lcd_spi_panel_deinit(lcd_spi_panel_obj_t *self);
 
 // i8080
 void hal_lcd_i80_construct(lcd_i80_obj_t *self);
@@ -13,6 +23,7 @@ void hal_lcd_i80_tx_color(lcd_i80_obj_t *self, int lcd_cmd, const void *color, s
 void hal_lcd_i80_deinit(lcd_i80_obj_t *self);
 
 // rgb
+#if RGB_LCD_SUPPORTED
 void hal_lcd_rgb_construct(lcd_rgb_obj_t *self);
 
 void hal_lcd_rgb_reset(lcd_rgb_obj_t *self);
@@ -32,5 +43,6 @@ void hal_lcd_rgb_set_gap(lcd_rgb_obj_t *self, int x_gap, int y_gap);
 void hal_lcd_rgb_invert_color(lcd_rgb_obj_t *self, bool invert_color_data);
 
 void hal_lcd_rgb_disp_off(lcd_rgb_obj_t *self, bool off);
+#endif
 
 #endif
