@@ -60,3 +60,8 @@ esp32
     :maxdepth: 1
 
     lcd
+
+.. toctree::
+    :maxdepth: 2
+
+    Copyrights <COPYRIGHT>

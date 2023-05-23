@@ -18,8 +18,8 @@ import subprocess, os
 # -- Project information -----------------------------------------------------
 
 project = 'Micropython LCD Library'
-copyright = '2022, lewin'
-author = 'lewin'
+copyright = '2022, lbuque'
+author = 'lbuque'
 
 # The full version, including alpha/beta/rc tags
 release = 'master'
