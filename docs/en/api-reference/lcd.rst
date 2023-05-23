@@ -14,6 +14,8 @@ Classes
 .. toctree::
     :maxdepth: 1
 
+    lcd.SPIPanel.rst
+    lcd.QSPIPanel.rst
     lcd.I8080.rst
     lcd.RGB.rst
     lcd.ST7789.rst

@@ -112,7 +112,7 @@ Methods
 
     Deinitialize the LCD panel.
 
-.. method:: ST7735。rotation(r: int)
+.. method:: ST7735.rotation(r: int)
 
     Set the rotates the logical display in a counter-clockwise direction.
 
