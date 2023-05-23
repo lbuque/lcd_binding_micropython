@@ -15,7 +15,7 @@ Classes
     lcd.SPIPanel.rst
     lcd.QSPIPanel.rst
     lcd.I8080.rst
-    lcd.RGB.rst
+    lcd.DPI.rst
     lcd.ST7789.rst
     lcd.ST7735.rst
     lcd.ILI9488.rst

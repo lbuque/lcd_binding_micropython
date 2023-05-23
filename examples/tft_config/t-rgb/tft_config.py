@@ -107,44 +107,56 @@ def tft_init(xl):
             time.sleep(0.1)
     # print("Register setup complete")
 
+
 def config():
     i2c = machine.I2C(0, scl=machine.Pin(48), sda=machine.Pin(8))
     xl = xl9535.XL9535(i2c)
     pin = (1 << __PWR_EN_PIN) | \
-      (1 << __LCD_CS_PIN) | \
-      (1 << __TP_RES_PIN) | \
-      (1 << __LCD_SDA_PIN) | \
-      (1 << __LCD_CLK_PIN) | \
-      (1 << __LCD_RST_PIN) | \
-      (1 << __SD_CS_PIN)
+          (1 << __LCD_CS_PIN) | \
+          (1 << __TP_RES_PIN) | \
+          (1 << __LCD_SDA_PIN) | \
+          (1 << __LCD_CLK_PIN) | \
+          (1 << __LCD_RST_PIN) | \
+          (1 << __SD_CS_PIN)
     xl.pinMode8(0, pin, xl.OUT)
     xl.digitalWrite(__PWR_EN_PIN, 1)
     tft_init(xl)
     del i2c
     del xl
     gc.collect()
-    return lcd.RGB(data = (machine.Pin(7),   \
-                           machine.Pin(6),   \
-                           machine.Pin(5),   \
-                           machine.Pin(3),   \
-                           machine.Pin(2),   \
-                           machine.Pin(14),  \
-                           machine.Pin(13),  \
-                           machine.Pin(12),  \
-                           machine.Pin(11),  \
-                           machine.Pin(10),  \
-                           machine.Pin(9),   \
-                           machine.Pin(21),  \
-                           machine.Pin(18),  \
-                           machine.Pin(17),  \
-                           machine.Pin(16),  \
-                           machine.Pin(15)), \
-                   hsync = machine.Pin(47),          \
-                   vsync = machine.Pin(41),          \
-                   de = machine.Pin(45),             \
-                   pclk_pin = machine.Pin(42),       \
-                   timings = (1, 30, 50, 1, 30, 20), \
-                   backlight = machine.Pin(46),      \
-                   pclk = 10 * 1000 * 1000,          \
-                   width = 480,                      \
-                   height = 480)
+    tft = lcd.DPI(
+        data = (
+            machine.Pin(7),  \
+            machine.Pin(6),  \
+            machine.Pin(5),  \
+            machine.Pin(3),  \
+            machine.Pin(2),  \
+            machine.Pin(14), \
+            machine.Pin(13), \
+            machine.Pin(12), \
+            machine.Pin(11), \
+            machine.Pin(10), \
+            machine.Pin(9),  \
+            machine.Pin(21), \
+            machine.Pin(18), \
+            machine.Pin(17), \
+            machine.Pin(16), \
+            machine.Pin(15), \
+        ), \
+        hsync = machine.Pin(47),          \
+        vsync = machine.Pin(41),          \
+        de = machine.Pin(45),             \
+        pclk_pin = machine.Pin(42),       \
+        timings = (1, 30, 50, 1, 30, 20), \
+        backlight = machine.Pin(46),      \
+        pclk = 10 * 1000 * 1000,          \
+        width = 480,                      \
+        height = 480
+    )
+    tft.backlight_on()
+    return tft
+
+
+def color565(r, g, b):
+    c = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
+    return c

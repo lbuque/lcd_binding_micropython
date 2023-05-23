@@ -7,7 +7,7 @@
 #include "esp_lcd_panel_io.h"
 #endif
 
-typedef struct lcd_spi_panel_obj_t {
+typedef struct _mp_lcd_spi_panel_obj_t {
     mp_obj_base_t base;
 
     mp_obj_base_t *spi_obj;
@@ -34,8 +34,8 @@ typedef struct lcd_spi_panel_obj_t {
         LCD_SPI_PANEL_STATE_INIT,
         LCD_SPI_PANEL_STATE_DEINIT
     } state;
-} lcd_spi_panel_obj_t;
+} mp_lcd_spi_panel_obj_t;
 
-extern const mp_obj_type_t lcd_spi_panel_type;
+extern const mp_obj_type_t mp_lcd_spi_panel_type;
 
 #endif

@@ -1,41 +1,41 @@
-import lcd
-from machine import Pin
+import tft_config
 import time
-
-i8080 = lcd.I8080(data=(Pin(39), Pin(40), Pin(41), Pin(42), Pin(45), Pin(46), Pin(47), Pin(48)),
-                     command=Pin(7),
-                     write=Pin(8),
-                     read=Pin(9),
-                     cs=Pin(6),
-                     pclk=4 * 1000 * 1000,
-                     width=320,
-                     height=170,
-                     # swap_color_bytes=True,
-                     cmd_bits=8,
-                     param_bits=8)
-
-st = lcd.ST7789(i8080, reset=Pin(5), backlight=Pin(38))
-st.reset()
-st.init()
-st.invert_color(True)
-st.swap_xy(True)
-st.mirror(False, True)
-st.set_gap(0, 35)
-st.backlight_on()
-
 import framebuf
-buf = bytearray(320 * 170 * 2)
-fbuf = framebuf.FrameBuffer(buf, 320, 170, framebuf.RGB565)
+try:
+    from tft_config import color565
+except:
+    def color565(r, g, b):
+        c = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
+        return c
 
-while True:
-    fbuf.fill(st.color565(255, 0, 0))
-    st.bitmap(0, 0, 320, 170, buf)
-    time.sleep(1)
 
-    fbuf.fill(st.color565(0, 255, 0))
-    st.bitmap(0, 0, 320, 170, buf)
-    time.sleep(1)
+def render(tft, x, y, w, h, buf):
+    for i in range(0, h, 10):
+        tft.bitmap(0, i, w, i + 10, buf)
+    if h % 10 != 0:
+        tft.bitmap(0, h - h % 10, w, h, buf)
 
-    fbuf.fill(st.color565(0, 0, 255))
-    st.bitmap(0, 0, 320, 170, buf)
-    time.sleep(1)
+
+def main():
+    tft = tft_config.config()
+    width = tft.width()
+    height = tft.height()
+    buf = bytearray(width * 10 * 2)
+    fbuf = framebuf.FrameBuffer(buf, width, 10, framebuf.RGB565)
+
+    while True:
+        fbuf.fill(color565(255, 0, 0))
+        render(tft, 0, 0,width, height, buf)
+        time.sleep(0.5)
+
+        fbuf.fill(color565(0, 255, 0))
+        render(tft, 0, 0, width, height, buf)
+        time.sleep(0.5)
+
+        fbuf.fill(color565(0, 0, 255))
+        render(tft, 0, 0, width, height, buf)
+        time.sleep(0.5)
+
+
+main()
+

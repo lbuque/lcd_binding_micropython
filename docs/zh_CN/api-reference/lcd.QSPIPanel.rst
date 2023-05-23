@@ -6,7 +6,7 @@ QSPIPanel 类实现了 QSPI 串行行总线的通用控制和访问接口，可�
 Constructors
 ------------
 
-.. class:: QSPIPanel(spi: machine.SPI, data: tuple, command: Pin, cs: Pin=None, pclk: int=10000000, width: int=240, height: int=240, swap_color_bytes: bool=False, cmd_bits: int=8, param_bits: int=8)
+.. class:: QSPIPanel(spi: machine.SPI, data: tuple, dc: Pin, cs: Pin=None, pclk: int=10000000, width: int=240, height: int=240, swap_color_bytes: bool=False, cmd_bits: int=8, param_bits: int=8)
 
     创建一个 QSPIPanel 的对象。
 
@@ -14,7 +14,7 @@ Constructors
 
         - ``spi``: SPI 对象
         - ``data``: 用于数据线的引脚对象元组
-        - ``command``: 用于 D/C 线的引脚对象
+        - ``dc``: 用于 D/C 线的引脚对象
         - ``cs``: 用于 CS 线的引脚对象，如果不使用则设置为 None
         - ``pclk``: 像素时钟频率
         - ``width``: 水平分辨率，即一行中的像素数

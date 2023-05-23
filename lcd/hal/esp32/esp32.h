@@ -61,7 +61,6 @@ void hal_lcd_i80_tx_color(
 void hal_lcd_i80_deinit(mp_obj_base_t *self);
 
 // dpi
-#if DPI_LCD_SUPPORTED
 void hal_lcd_dpi_construct(mp_obj_base_t *self);
 
 void hal_lcd_dpi_reset(mp_obj_base_t *self);
@@ -88,6 +87,5 @@ void hal_lcd_dpi_set_gap(mp_obj_base_t *self, int x_gap, int y_gap);
 void hal_lcd_dpi_invert_color(mp_obj_base_t *self, bool invert_color_data);
 
 void hal_lcd_dpi_disp_off(mp_obj_base_t *self, bool off);
-#endif
 
 #endif

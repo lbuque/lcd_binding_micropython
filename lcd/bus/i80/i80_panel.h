@@ -7,7 +7,7 @@
 #include "esp_lcd_panel_io.h"
 #endif
 
-typedef struct lcd_i80_obj_t {
+typedef struct _mp_lcd_i80_obj_t {
     mp_obj_base_t base;
 
     uint16_t width;
@@ -34,14 +34,13 @@ typedef struct lcd_i80_obj_t {
     bool swap_color_bytes;
     int cmd_bits;
     int param_bits;
-#if USE_ESP_LCD
+
     esp_lcd_i80_bus_handle_t i80_bus;
     esp_lcd_panel_io_handle_t io_handle;
-#else
     void (*write_color)(mp_hal_pin_obj_t *databus, mp_hal_pin_obj_t wr, const uint8_t *buf, int len);
-#endif
-} lcd_i80_obj_t;
 
-extern const mp_obj_type_t lcd_i80_type;
+} mp_lcd_i80_obj_t;
+
+extern const mp_obj_type_t mp_lcd_i80_type;
 
 #endif

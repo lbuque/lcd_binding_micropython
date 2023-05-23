@@ -24,7 +24,7 @@
 #define WR_LOW()  (mp_hal_pin_write(self->wr_pin, 0))
 #define WR_HIGH() (mp_hal_pin_write(self->wr_pin, 1))
 
-STATIC void write_bus(lcd_i80_obj_t *self, const uint8_t *buf, int len)
+STATIC void write_bus(mp_lcd_i80_obj_t *self, const uint8_t *buf, int len)
 {
     static uint8_t last = 0;
     uint8_t b;
@@ -112,7 +112,7 @@ STATIC void write_color_swap_bytes(mp_hal_pin_obj_t *databus, mp_hal_pin_obj_t w
 }
 
 
-void hal_lcd_i80_construct(lcd_i80_obj_t *self) {
+void hal_lcd_i80_construct(mp_lcd_i80_obj_t *self) {
     for (size_t i = 0; i < self->bus_width; i++)
     {
         self->databus_pins[i] = mp_hal_get_pin_obj(self->databus[i]);
@@ -154,7 +154,7 @@ void hal_lcd_i80_construct(lcd_i80_obj_t *self) {
 }
 
 
-void hal_lcd_i80_tx_param(lcd_i80_obj_t *self, int lcd_cmd, const void *param, size_t param_size) {
+void hal_lcd_i80_tx_param(mp_lcd_i80_obj_t *self, int lcd_cmd, const void *param, size_t param_size) {
     DEBUG_printf("tx_param cmd: %x, param_size: %u\n", lcd_cmd, param_size);
     CS_LOW()
     if (lcd_cmd) {
@@ -168,7 +168,7 @@ void hal_lcd_i80_tx_param(lcd_i80_obj_t *self, int lcd_cmd, const void *param, s
 }
 
 
-void hal_lcd_i80_tx_color(lcd_i80_obj_t *self, int lcd_cmd, const void *color, size_t color_size) {
+void hal_lcd_i80_tx_color(mp_lcd_i80_obj_t *self, int lcd_cmd, const void *color, size_t color_size) {
     DEBUG_printf("tx_color cmd: %x, color_size: %u\n", lcd_cmd, color_size);
     CS_LOW()
     if (lcd_cmd) {
@@ -182,7 +182,7 @@ void hal_lcd_i80_tx_color(lcd_i80_obj_t *self, int lcd_cmd, const void *color, s
 }
 
 
-void hal_lcd_i80_deinit(lcd_i80_obj_t *self) {
+void hal_lcd_i80_deinit(mp_lcd_i80_obj_t *self) {
     // esp_lcd_panel_io_del(self->io_handle);
     // esp_lcd_del_i80_bus(self->i80_bus);
 }

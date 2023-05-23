@@ -6,14 +6,14 @@ SPIPanel 类实现了 SPI 串行行总线的通用控制和访问接口，可以
 Constructors
 ------------
 
-.. class:: SPIPanel(spi: machine.SPI, command: Pin, cs: Pin=None, pclk: int=10000000, width: int=240, height: int=240, swap_color_bytes: bool=False, cmd_bits: int=8, param_bits: int=8)
+.. class:: SPIPanel(spi: machine.SPI, dc: Pin, cs: Pin=None, pclk: int=10000000, width: int=240, height: int=240, swap_color_bytes: bool=False, cmd_bits: int=8, param_bits: int=8)
 
     创建一个 SPIPanel 的对象。
 
     这些参数是：
 
         - ``spi``: SPI 对象
-        - ``command``: 用于 D/C 线的引脚对象
+        - ``dc``: 用于 D/C 线的引脚对象
         - ``cs``: 用于 CS 线的引脚对象，如果不使用则设置为 None
         - ``pclk``: 像素时钟频率
         - ``width``: 水平分辨率，即一行中的像素数

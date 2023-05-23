@@ -6,7 +6,7 @@ The QSPIPanel class implements the general control and access interface of the S
 Constructors
 ------------
 
-.. class:: QSPIPanel(spi: machine.SPI, data: tuple, command: Pin, cs: Pin=None, pclk: int=10000000, width: int=240, height: int=240, swap_color_bytes: bool=False, cmd_bits: int=8, param_bits: int=8)
+.. class:: QSPIPanel(spi: machine.SPI, data: tuple, dc: Pin, cs: Pin=None, pclk: int=10000000, width: int=240, height: int=240, cmd_bits: int=8, param_bits: int=8)
 
     Create an QSPIPanel object.
 
@@ -14,12 +14,11 @@ Constructors
 
         - ``spi``: SPI object
         - ``data``: Pins used for data lines
-        - ``command``: Pins used for data lines
+        - ``dc``: Pins used for data lines
         - ``cs``: Pin used for CS line, set to None if it’s not used
         - ``pclk``: Frequency of pixel clock
         - ``width``: Horizontal resolution, i.e. the number of pixels in a line
         - ``height``: Vertical resolution, i.e. the number of lines in the frame
-        - ``swap_color_bytes``: Swap adjacent two color bytes
         - ``cmd_bits``: Bit-width of LCD command
         - ``param_bits``: Bit-width of LCD parameter
 

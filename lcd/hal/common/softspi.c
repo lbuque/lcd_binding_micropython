@@ -36,7 +36,7 @@
 
 void hal_lcd_softspi_panel_construct(mp_obj_base_t *self)
 {
-    lcd_spi_panel_obj_t *spi_panel_obj = (lcd_spi_panel_obj_t *)self;
+    mp_lcd_spi_panel_obj_t *spi_panel_obj = (mp_lcd_spi_panel_obj_t *)self;
     if (spi_panel_obj->dc != MP_OBJ_NULL) {
         spi_panel_obj->dc_pin = mp_hal_get_pin_obj(spi_panel_obj->dc);
         mp_hal_pin_output(spi_panel_obj->dc_pin);
@@ -63,7 +63,7 @@ void hal_lcd_softspi_panel_tx_param(mp_obj_base_t *self,
 {
     DEBUG_printf("hal_lcd_qspi_panel_tx_param cmd: %x, param_size: %u\n", lcd_cmd, param_size);
 
-    lcd_spi_panel_obj_t *spi_panel_obj = (lcd_spi_panel_obj_t *)self;
+    mp_lcd_spi_panel_obj_t *spi_panel_obj = (mp_lcd_spi_panel_obj_t *)self;
 #ifdef MP_OBJ_TYPE_GET_SLOT
     mp_machine_spi_p_t *spi_p = (mp_machine_spi_p_t *) MP_OBJ_TYPE_GET_SLOT(spi_panel_obj->spi_obj->type, protocol);
 #else
@@ -90,7 +90,7 @@ void hal_lcd_softspi_panel_tx_color(mp_obj_base_t *self,
 {
     DEBUG_printf("hal_lcd_softspi_panel_tx_color cmd: %x, color_size: %u\n", lcd_cmd, color_size);
 
-    lcd_spi_panel_obj_t *spi_panel_obj = (lcd_spi_panel_obj_t *)self;
+    mp_lcd_spi_panel_obj_t *spi_panel_obj = (mp_lcd_spi_panel_obj_t *)self;
 #ifdef MP_OBJ_TYPE_GET_SLOT
     mp_machine_spi_p_t *spi_p = (mp_machine_spi_p_t *) MP_OBJ_TYPE_GET_SLOT(spi_panel_obj->spi_obj->type, protocol);
 #else

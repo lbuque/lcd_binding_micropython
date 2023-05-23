@@ -6,14 +6,14 @@ I8080类实现了 I8080 并行总线的通用控制和访问接口，可以通�
 Constructors
 ------------
 
-.. class:: I8080(data: tuple=None, command: Pin=None, write: Pin=None, read: Pin=None, cs: Pin=None, pclk: int= 10000000, width: int=240, height: int=240, swap_color_bytes: bool=False, cmd_bits: int=8, param_bits: int=8)
+.. class:: I8080(data: tuple=None, dc: Pin=None, write: Pin=None, read: Pin=None, cs: Pin=None, pclk: int= 10000000, width: int=240, height: int=240, swap_color_bytes: bool=False, cmd_bits: int=8, param_bits: int=8)
 
     创建一个Intel 8080的对象。
 
     这些参数是：
 
         - ``data``: 用于数据线的引脚对象元组
-        - ``command``: 用于 D/C 线的引脚对象
+        - ``dc``: 用于 D/C 线的引脚对象
         - ``write``: 用于 WR 线的引脚对象
         - ``read``: RD 线使用的引脚对象，如果不使用则设置为None
         - ``cs``: 用于 CS 线的引脚对象，如果不使用则设置为 None

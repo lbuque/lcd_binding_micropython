@@ -1,7 +1,9 @@
 from machine import Pin, SPI, SoftSPI
 import time
-import lcd 
+import lcd
 
+TFA = const(1)
+BFA = const(1)
 
 # waveshare
 # cmd(int) args(bytes) delay(ms)
@@ -77,9 +79,9 @@ init_tft_espi_2 = (
 )
 
 def config():
-    # hspi = SPI(2, sck=Pin(18), mosi=Pin(19), miso=None)
-    hspi = SoftSPI(baudrate=80 * 1000* 1000, polarity=0, phase=0, sck=Pin(18), mosi=Pin(19), miso=Pin(4))
-    panel = lcd.SPIPanel(spi=hspi, command=Pin(23), cs=Pin(5), pclk=60000000, width=80, height=160)
+    hspi = SPI(2, sck=Pin(18), mosi=Pin(19), miso=None)
+    # hspi = SoftSPI(baudrate=80 * 1000* 1000, polarity=0, phase=0, sck=Pin(18), mosi=Pin(19), miso=Pin(4))
+    panel = lcd.SPIPanel(spi=hspi, dc=Pin(23), cs=Pin(5), pclk=60000000, width=80, height=160)
     st = lcd.ST7735(panel, reset=Pin(26), backlight=Pin(27))
     st.backlight_on()
     st.reset()
@@ -87,3 +89,8 @@ def config():
     st.invert_color(True)
     st.rotation(3)
     return st
+
+
+def color565(r, g, b):
+    c = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
+    return c

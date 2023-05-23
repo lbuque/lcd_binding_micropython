@@ -19,12 +19,13 @@ rm67162_qspi_init = (
     (0x51, b'\xD0', 0),   # Write Display Brightness MAX_VAL=0XFF
 )
 
+
 def config():
     hspi = SPI(2, sck=Pin(47), mosi=None, miso=None, polarity=0, phase=0)
     panel = lcd.QSPIPanel(
         spi=hspi,
         data=(Pin(18), Pin(7), Pin(48), Pin(5)),
-        command=Pin(7),
+        dc=Pin(7),
         cs=Pin(6),
         pclk=80 * 1000 * 1000,
         width=240,
@@ -37,3 +38,8 @@ def config():
     rm.rotation(0)
     rm.backlight_on()
     return rm
+
+
+def color565(r, g, b):
+    c = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
+    return (c >> 8) | (c << 8)

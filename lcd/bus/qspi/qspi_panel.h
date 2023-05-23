@@ -8,7 +8,7 @@
 #include "driver/spi_master.h"
 #endif
 
-typedef struct lcd_qspi_panel_obj_t {
+typedef struct _mp_lcd_qspi_panel_obj_t {
     mp_obj_base_t base;
     mp_obj_base_t *spi_obj;
     uint16_t width;
@@ -33,8 +33,8 @@ typedef struct lcd_qspi_panel_obj_t {
 #else
     void (*write_color)(mp_hal_pin_obj_t *databus, mp_hal_pin_obj_t wr, const uint8_t *buf, int len);
 #endif
-} lcd_qspi_panel_obj_t;
+} mp_lcd_qspi_panel_obj_t;
 
-extern const mp_obj_type_t lcd_qspi_panel_type;
+extern const mp_obj_type_t mp_lcd_qspi_panel_type;
 
 #endif

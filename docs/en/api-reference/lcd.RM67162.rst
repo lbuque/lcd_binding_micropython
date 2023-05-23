@@ -104,9 +104,9 @@ Methods
 
     turn off the backlight.
 
-.. method:: RM67162.color565(red: int, green: int, blue: int)
+.. method:: RM67162.backlight(brightness: int)
 
-    Convert RGB888 color data to RGB565.
+    Adjust the brightness of the backlight.
 
 .. method:: RM67162.deint()
 
@@ -130,17 +130,24 @@ Methods
         +---------+----------------------------------------------------------------------------------------------------------+
         | Display | Default Orientation Tables                                                                               |
         +=========+==========================================================================================================+
-        | 240x320 | ((0x00, 240, 320,  0,  0), (0x60, 320, 240,  0,  0), (0xc0, 240, 320,  0,  0), (0xa0, 320, 240,  0,  0)) |
+        | 240x536 | ((0x00, 240, 536, 0, 0), (0x60, 536, 240, 0, 0), (0xC0, 240, 536, 0, 0), (0xA0, 536, 240, 0, 0))         |
         +---------+----------------------------------------------------------------------------------------------------------+
-        | 170x320 | ((0x00, 170, 320, 35, 0), (0x60, 320, 170, 0, 35), (0xc0, 170, 320, 35, 0), (0xa0, 320, 170, 0, 35))     |
+        | other   | ((0x00, 0, 0, 0, 0), (0x60, 0, 0, 0, 0), (0xC0, 0, 0, 0, 0), (0xA0, 0, 0, 0, 0))                         |
         +---------+----------------------------------------------------------------------------------------------------------+
-        | 240x240 | ((0x00, 240, 240,  0,  0), (0x60, 240, 240,  0,  0), (0xc0, 240, 240,  0, 80), (0xa0, 240, 240, 80,  0)) |
-        +---------+----------------------------------------------------------------------------------------------------------+
-        | 135x240 | ((0x00, 135, 240, 52, 40), (0x60, 240, 135, 40, 53), (0xc0, 135, 240, 53, 40), (0xa0, 240, 135, 40, 52)) |
-        +---------+----------------------------------------------------------------------------------------------------------+
-        | 128x160 | ((0x00, 128, 160,  0,  0), (0x60, 160, 128,  0,  0), (0xc0, 128, 160,  0,  0), (0xa0, 160, 128,  0,  0)) |
-        +---------+----------------------------------------------------------------------------------------------------------+
-        | 128x128 | ((0x00, 128, 128,  2,  1), (0x60, 128, 128,  1,  2), (0xc0, 128, 128,  2,  3), (0xa0, 128, 128,  3,  2)) |
-        +---------+----------------------------------------------------------------------------------------------------------+
-        | other   | ((0x00, 0, 0,  0,  0), (0x60, 0, 0,  0,  0), (0xc0, 0, 0,  0,  0), (0xa0, 0, 0,  0,  0))                 |
-        +---------+----------------------------------------------------------------------------------------------------------+
+
+.. method:: RM67162.vscroll_area(tfa: int, height: int, bfa: int)
+
+    Set the vertical scrolling parameters.
+
+    - ``tfa`` is the top fixed area in pixels. The top fixed area is the upper portion of the display frame buffer that will not be scrolled.
+
+    - ``height`` is the total height in pixels of the area scrolled.
+
+    - ``bfa`` is the bottom fixed area in pixels. The bottom fixed area is the lower portion of the display frame buffer that will not be scrolled.
+
+.. method:: RM67162.vscroll_start(address: int, order: bool=False)
+
+    Set the vertical scroll address.
+
+    - ``address`` is the vertical scroll start address in pixels. The vertical scroll start address is the line in the frame buffer will be the first line shown after the TFA.
+    - ``order`` is the Vertical Refresh Order. When ``order`` == ``False``, LCD vertical refresh Top to Bottom; When ``order`` == ``False``, LCD vertical refresh Bottom to Top.
