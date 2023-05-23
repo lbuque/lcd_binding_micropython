@@ -2,6 +2,9 @@
 #include "i80_panel.h"
 #include "st7789.h"
 #include "lcd_panel.h"
+#include "lcd_panel_commands.h"
+#include "lcd_panel_types.h"
+#include "st7789_rotation.h"
 
 #include "py/obj.h"
 #include "py/runtime.h"
@@ -9,21 +12,6 @@
 #include "py/gc.h"
 
 #include <string.h>
-
-
-#define COLOR_SPACE_RGB        (0)
-#define COLOR_SPACE_BGR        (1)
-#define COLOR_SPACE_MONOCHROME (2)
-
-
-typedef struct _st7789_rotation_t {
-    uint8_t madctl;
-    uint16_t width;
-    uint16_t height;
-    uint16_t colstart;
-    uint16_t rowstart;
-} st7789_rotation_t;
-
 
 // this is the actual C-structure for our new object
 typedef struct lcd_st7789_obj_t {
@@ -42,132 +30,68 @@ typedef struct lcd_st7789_obj_t {
     uint16_t width;
     uint16_t height;
     uint8_t rotation;
-    const st7789_rotation_t *rotations;   // list of rotation tuples [(madctl, colstart, rowstart)]
+    lcd_panel_rotation_t rotations[4];   // list of rotation tuples [(madctl, colstart, rowstart)]
     int x_gap;
     int y_gap;
-    uint32_t bits_per_pixel;
-    uint8_t fb_bits_per_pixel;
+    uint32_t bpp;
+    uint8_t fb_bpp;
     uint8_t madctl_val; // save current value of LCD_CMD_MADCTL register
     uint8_t colmod_cal; // save surrent value of LCD_CMD_COLMOD register
 } lcd_st7789_obj_t;
 
 
-//
-// Default st7789 and st7735 display orientation tables
-// can be overridden during init(), madctl values
-// will be combined with color_mode
-//
+STATIC void set_rotation(lcd_st7789_obj_t *self, uint8_t rotation)
+{
+    self->madctl_val |= self->rotations[rotation].madctl;
 
-//{ madctl, width, height, colstart, rowstart }
-
-STATIC const st7789_rotation_t ORIENTATIONS_240x320[4] = {
-    { 0x00, 240, 320, 0, 0},
-    { 0x60, 320, 240, 0, 0},
-    { 0xc0, 240, 320, 0, 0},
-    { 0xa0, 320, 240, 0, 0}
-};
-
-STATIC const st7789_rotation_t ORIENTATIONS_170x320[4] = {
-    {0x00, 170, 320, 35,  0},
-    {0x60, 320, 170,  0, 35},
-    {0xc0, 170, 320, 35,  0},
-    {0xa0, 320, 170,  0, 35}
-};
-
-STATIC const st7789_rotation_t ORIENTATIONS_240x240[4] = {
-    {0x00, 240, 240,  0,  0},
-    {0x60, 240, 240,  0,  0},
-    {0xc0, 240, 240,  0, 80},
-    {0xa0, 240, 240, 80,  0}
-};
-
-STATIC const st7789_rotation_t ORIENTATIONS_135x240[4] = {
-    {0x00, 135, 240, 52, 40},
-    {0x60, 240, 135, 40, 53},
-    {0xc0, 135, 240, 53, 40},
-    {0xa0, 240, 135, 40, 52}
-};
-
-STATIC const st7789_rotation_t ORIENTATIONS_128x160[4] = {
-    {0x00, 128, 160, 0, 0},
-    {0x60, 160, 128, 0, 0},
-    {0xc0, 128, 160, 0, 0},
-    {0xa0, 160, 128, 0, 0}
-};
-
-STATIC const st7789_rotation_t ORIENTATIONS_128x128[4] = {
-    {0x00, 128, 128, 2, 1},
-    {0x60, 128, 128, 1, 2},
-    {0xc0, 128, 128, 2, 3},
-    {0xa0, 128, 128, 3, 2}
-};
-
-
-STATIC const char* color_space_description[] = {
-    "RGB",
-    "BGR",
-    "MONOCHROME"
-};
-
-
-STATIC void set_rotation(lcd_st7789_obj_t *self, uint8_t rotation) {
-    if (self->rotations != NULL) {
-        self->madctl_val |= self->rotations[rotation].madctl;
-
-        // tx param
-        if (self->lcd_panel_p) {
-            self->lcd_panel_p->tx_param(
-                self->bus_obj,
-                0x36,
-                (uint8_t[]) {
-                    self->madctl_val,
-                },
-                1
-            );
-        }
-
-        // self->width = self->rotations[rotation].width;
-        // self->height = self->rotations[rotation].height;
-        self->x_gap = self->rotations[rotation].colstart;
-        self->y_gap = self->rotations[rotation].rowstart;
-    } else {
-        mp_warning(NULL, "rotation method is not supported");
-        mp_warning(NULL, "Please use mirror method and swap_xy method to rotate the screen");
+    // tx param
+    if (self->lcd_panel_p) {
+        self->lcd_panel_p->tx_param(
+            self->bus_obj,
+            0x36,
+            (uint8_t[]) {
+                self->madctl_val,
+            },
+            1
+        );
     }
+
+    self->width = self->rotations[rotation].width;
+    self->height = self->rotations[rotation].height;
+    self->x_gap = self->rotations[rotation].colstart;
+    self->y_gap = self->rotations[rotation].rowstart;
 }
 
 
-STATIC void lcd_st7789_print(
-    const mp_print_t *print,
-    mp_obj_t self_in,
-    mp_print_kind_t kind
-) {
+STATIC void lcd_st7789_print(const mp_print_t *print,
+                             mp_obj_t          self_in,
+                             mp_print_kind_t   kind)
+{
     (void) kind;
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
     mp_printf(
         print,
-        "<ST7789 bus=%p, reset=%p, color_space=%s, bits_per_pixel=%u>",
+        "<ST7789 bus=%p, reset=%p, color_space=%s, bpp=%u>",
         self->bus_obj,
         self->reset,
-        color_space_description[self->color_space],
-        self->bits_per_pixel
+        color_space_desc[self->color_space],
+        self->bpp
     );
 }
 
 
-mp_obj_t lcd_st7789_make_new(
-    const mp_obj_type_t *type,
-    size_t n_args,
-    size_t n_kw,
-    const mp_obj_t * all_args
-) {
+mp_obj_t lcd_st7789_make_new(const mp_obj_type_t *type,
+                             size_t               n_args,
+                             size_t               n_kw,
+                             const mp_obj_t      *all_args)
+{
     enum {
         ARG_bus,
         ARG_reset,
         ARG_backlight,
         ARG_reset_level,
         ARG_color_space,
-        ARG_bits_per_pixel
+        ARG_bpp
     };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_bus,            MP_ARG_OBJ | MP_ARG_REQUIRED, {.u_obj = MP_OBJ_NULL}     },
@@ -175,7 +99,7 @@ mp_obj_t lcd_st7789_make_new(
         { MP_QSTR_backlight,      MP_ARG_OBJ | MP_ARG_KW_ONLY,  {.u_obj = MP_OBJ_NULL}     },
         { MP_QSTR_reset_level,    MP_ARG_BOOL | MP_ARG_KW_ONLY, {.u_bool = false}          },
         { MP_QSTR_color_space,    MP_ARG_INT | MP_ARG_KW_ONLY,  {.u_int = COLOR_SPACE_RGB} },
-        { MP_QSTR_bits_per_pixel, MP_ARG_INT | MP_ARG_KW_ONLY,  {.u_int = 16}              },
+        { MP_QSTR_bpp,            MP_ARG_INT | MP_ARG_KW_ONLY,  {.u_int = 16}              },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, all_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
@@ -199,7 +123,7 @@ mp_obj_t lcd_st7789_make_new(
     self->backlight      = args[ARG_backlight].u_obj;
     self->reset_level    = args[ARG_reset_level].u_bool;
     self->color_space    = args[ARG_color_space].u_int;
-    self->bits_per_pixel = args[ARG_bits_per_pixel].u_int;
+    self->bpp = args[ARG_bpp].u_int;
 
     // reset
     if (self->reset != MP_OBJ_NULL) {
@@ -215,22 +139,32 @@ mp_obj_t lcd_st7789_make_new(
 
     if ((self->width == 240 && self->height == 320) || \
         (self->width == 320 && self->height == 240)) {
-        self->rotations = ORIENTATIONS_240x320;
+        memcpy(&self->rotations, ORIENTATIONS_240x320, sizeof(ORIENTATIONS_240x320));
     } else if ((self->width == 170 && self->height == 320) || \
                (self->width == 320 && self->height == 170)) {
-        self->rotations = ORIENTATIONS_170x320;
+        memcpy(&self->rotations, ORIENTATIONS_170x320, sizeof(ORIENTATIONS_170x320));
     } else if (self->width == 240 && self->height == 240) {
-        self->rotations = ORIENTATIONS_240x240;
+        memcpy(&self->rotations, ORIENTATIONS_240x240, sizeof(ORIENTATIONS_240x240));
     } else if ((self->width == 135 && self->height == 240) ||
                (self->width == 240 && self->height == 135)) {
-        self->rotations = ORIENTATIONS_135x240;
+        memcpy(&self->rotations, ORIENTATIONS_135x240, sizeof(ORIENTATIONS_135x240));
     } else if ((self->width == 128 && self->height == 160) || \
                (self->width == 160 && self->height == 128)) {
-        self->rotations = ORIENTATIONS_128x160;
+        memcpy(&self->rotations, ORIENTATIONS_128x160, sizeof(ORIENTATIONS_128x160));
     } else if (self->width == 128 && self->height == 128) {
-        self->rotations = ORIENTATIONS_128x128;
+        memcpy(&self->rotations, ORIENTATIONS_128x128, sizeof(ORIENTATIONS_128x128));
     } else {
         mp_warning(NULL, "rotation parameter not detected");
+        mp_warning(NULL, "use default rotation parameters");
+        memcpy(&self->rotations, ORIENTATIONS_GENERAL, sizeof(ORIENTATIONS_GENERAL));
+        self->rotations[0].width = self->width;
+        self->rotations[0].height = self->height;
+        self->rotations[1].width = self->height;
+        self->rotations[1].height = self->width;
+        self->rotations[2].width = self->width;
+        self->rotations[2].height = self->height;
+        self->rotations[3].width = self->height;
+        self->rotations[3].height = self->width;
     }
 
     switch (self->color_space) {
@@ -247,15 +181,15 @@ mp_obj_t lcd_st7789_make_new(
         break;
     }
 
-    switch (self->bits_per_pixel) {
+    switch (self->bpp) {
         case 16:
             self->colmod_cal = 0x55;
-            self->fb_bits_per_pixel = 16;
+            self->fb_bpp = 16;
         break;
 
         case 18:
             self->colmod_cal = 0x66;
-            self->fb_bits_per_pixel = 24;
+            self->fb_bpp = 24;
         break;
 
         default:
@@ -267,7 +201,8 @@ mp_obj_t lcd_st7789_make_new(
 }
 
 
-STATIC mp_obj_t lcd_st7789_deinit(mp_obj_t self_in) {
+STATIC mp_obj_t lcd_st7789_deinit(mp_obj_t self_in)
+{
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if (self->lcd_panel_p) {
@@ -280,7 +215,8 @@ STATIC mp_obj_t lcd_st7789_deinit(mp_obj_t self_in) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(lcd_st7789_deinit_obj, lcd_st7789_deinit);
 
 
-STATIC mp_obj_t lcd_st7789_reset(mp_obj_t self_in) {
+STATIC mp_obj_t lcd_st7789_reset(mp_obj_t self_in)
+{
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if (self->reset != MP_OBJ_NULL) {
@@ -300,7 +236,8 @@ STATIC mp_obj_t lcd_st7789_reset(mp_obj_t self_in) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(lcd_st7789_reset_obj, lcd_st7789_reset);
 
 
-STATIC mp_obj_t lcd_st7789_init(mp_obj_t self_in) {
+STATIC mp_obj_t lcd_st7789_init(mp_obj_t self_in)
+{
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if (self->lcd_panel_p) {
@@ -324,7 +261,8 @@ STATIC mp_obj_t lcd_st7789_init(mp_obj_t self_in) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(lcd_st7789_init_obj, lcd_st7789_init);
 
 
-STATIC mp_obj_t lcd_st7789_custom_init(mp_obj_t self_in, mp_obj_t cmd_list_in) {
+STATIC mp_obj_t lcd_st7789_custom_init(mp_obj_t self_in, mp_obj_t cmd_list_in)
+{
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
     mp_int_t id = 0;
     mp_buffer_info_t args;
@@ -348,7 +286,8 @@ STATIC mp_obj_t lcd_st7789_custom_init(mp_obj_t self_in, mp_obj_t cmd_list_in) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(lcd_st7789_custom_init_obj, lcd_st7789_custom_init);
 
 
-STATIC mp_obj_t lcd_st7789_bitmap(size_t n_args, const mp_obj_t *args_in) {
+STATIC mp_obj_t lcd_st7789_bitmap(size_t n_args, const mp_obj_t *args_in)
+{
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(args_in[0]);
 
     int x_start = mp_obj_get_int(args_in[1]);
@@ -376,7 +315,7 @@ STATIC mp_obj_t lcd_st7789_bitmap(size_t n_args, const mp_obj_t *args_in) {
             (((y_end - 1) >> 8) & 0xFF),
             ((y_end - 1) & 0xFF),
         }, 4);
-        size_t len = ((x_end - x_start) * (y_end - y_start) * self->fb_bits_per_pixel / 8);
+        size_t len = ((x_end - x_start) * (y_end - y_start) * self->fb_bpp / 8);
         self->lcd_panel_p->tx_color(self->bus_obj, 0x2C, bufinfo.buf, len);
     }
 
@@ -386,11 +325,10 @@ STATIC mp_obj_t lcd_st7789_bitmap(size_t n_args, const mp_obj_t *args_in) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(lcd_st7789_bitmap_obj, 6, 6, lcd_st7789_bitmap);
 
 
-STATIC mp_obj_t lcd_st7789_mirror(
-    mp_obj_t self_in,
-    mp_obj_t mirror_x_in,
-    mp_obj_t mirror_y_in
-) {
+STATIC mp_obj_t lcd_st7789_mirror(mp_obj_t self_in,
+                                  mp_obj_t mirror_x_in,
+                                  mp_obj_t mirror_y_in)
+{
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if (mp_obj_is_true(mirror_x_in)) {
@@ -415,7 +353,8 @@ STATIC mp_obj_t lcd_st7789_mirror(
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(lcd_st7789_mirror_obj, lcd_st7789_mirror);
 
 
-STATIC mp_obj_t lcd_st7789_swap_xy(mp_obj_t self_in, mp_obj_t swap_axes_in) {
+STATIC mp_obj_t lcd_st7789_swap_xy(mp_obj_t self_in, mp_obj_t swap_axes_in)
+{
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if (mp_obj_is_true(swap_axes_in)) {
@@ -435,11 +374,10 @@ STATIC mp_obj_t lcd_st7789_swap_xy(mp_obj_t self_in, mp_obj_t swap_axes_in) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(lcd_st7789_swap_xy_obj, lcd_st7789_swap_xy);
 
 
-STATIC mp_obj_t lcd_st7789_set_gap(
-    mp_obj_t self_in,
-    mp_obj_t x_gap_in,
-    mp_obj_t y_gap_in
-) {
+STATIC mp_obj_t lcd_st7789_set_gap(mp_obj_t self_in,
+                                   mp_obj_t x_gap_in,
+                                   mp_obj_t y_gap_in)
+{
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     self->x_gap = mp_obj_get_int(x_gap_in);
@@ -450,7 +388,8 @@ STATIC mp_obj_t lcd_st7789_set_gap(
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(lcd_st7789_set_gap_obj, lcd_st7789_set_gap);
 
 
-STATIC mp_obj_t lcd_st7789_invert_color(mp_obj_t self_in, mp_obj_t invert_in) {
+STATIC mp_obj_t lcd_st7789_invert_color(mp_obj_t self_in, mp_obj_t invert_in)
+{
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if (mp_obj_is_true(invert_in)) {
@@ -468,7 +407,8 @@ STATIC mp_obj_t lcd_st7789_invert_color(mp_obj_t self_in, mp_obj_t invert_in) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(lcd_st7789_invert_color_obj, lcd_st7789_invert_color);
 
 
-STATIC mp_obj_t lcd_st7789_disp_off(mp_obj_t self_in, mp_obj_t off_in) {
+STATIC mp_obj_t lcd_st7789_disp_off(mp_obj_t self_in, mp_obj_t off_in)
+{
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if (mp_obj_is_true(off_in)) {
@@ -486,7 +426,8 @@ STATIC mp_obj_t lcd_st7789_disp_off(mp_obj_t self_in, mp_obj_t off_in) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(lcd_st7789_disp_off_obj, lcd_st7789_disp_off);
 
 
-STATIC mp_obj_t lcd_st7789_backlight_on(mp_obj_t self_in) {
+STATIC mp_obj_t lcd_st7789_backlight_on(mp_obj_t self_in)
+{
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if (self->backlight != MP_OBJ_NULL) {
@@ -500,7 +441,8 @@ STATIC mp_obj_t lcd_st7789_backlight_on(mp_obj_t self_in) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(lcd_st7789_backlight_on_obj, lcd_st7789_backlight_on);
 
 
-STATIC mp_obj_t lcd_st7789_backlight_off(mp_obj_t self_in) {
+STATIC mp_obj_t lcd_st7789_backlight_off(mp_obj_t self_in)
+{
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if (self->backlight != MP_OBJ_NULL) {
@@ -514,7 +456,8 @@ STATIC mp_obj_t lcd_st7789_backlight_off(mp_obj_t self_in) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(lcd_st7789_backlight_off_obj, lcd_st7789_backlight_off);
 
 
-STATIC mp_obj_t lcd_st7789_color565(size_t n_args, const mp_obj_t *args_in) {
+STATIC mp_obj_t lcd_st7789_color565(size_t n_args, const mp_obj_t *args_in)
+{
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(args_in[0]);
     lcd_i80_obj_t *i8080_obj = MP_OBJ_TO_PTR(self->bus_obj);
     uint16_t color = 0;
@@ -555,14 +498,27 @@ STATIC mp_obj_t lcd_st7789_height(mp_obj_t self_in)
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(lcd_st7789_height_obj, lcd_st7789_height);
 
 
-STATIC mp_obj_t lcd_st7789_rotation(mp_obj_t self_in, mp_obj_t rotation_in)
+STATIC mp_obj_t lcd_st7789_rotation(size_t n_args, const mp_obj_t *args_in)
 {
-    lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    self->rotation = mp_obj_get_int(rotation_in) % 4;
+    lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(args_in[0]);
+    self->rotation = mp_obj_get_int(args_in[1]) % 4;
+    if (n_args > 2) {
+        mp_obj_tuple_t *rotations_in = MP_OBJ_TO_PTR(args_in[2]);
+        for (size_t i = 0; i < rotations_in->len; i++) {
+            if (i < 4) {
+                mp_obj_tuple_t *item = MP_OBJ_TO_PTR(rotations_in->items[i]);
+                self->rotations[i].madctl   = mp_obj_get_int(item->items[0]);
+                self->rotations[i].width    = mp_obj_get_int(item->items[1]);
+                self->rotations[i].height   = mp_obj_get_int(item->items[2]);
+                self->rotations[i].colstart = mp_obj_get_int(item->items[3]);
+                self->rotations[i].rowstart = mp_obj_get_int(item->items[4]);
+            }
+        }
+    }
     set_rotation(self, self->rotation);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(lcd_st7789_rotation_obj, lcd_st7789_rotation);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(lcd_st7789_rotation_obj, 2, 3, lcd_st7789_rotation);
 
 
 STATIC const mp_rom_map_elem_t lcd_st7789_locals_dict_table[] = {
@@ -586,7 +542,7 @@ STATIC const mp_rom_map_elem_t lcd_st7789_locals_dict_table[] = {
 
     { MP_ROM_QSTR(MP_QSTR_RGB),           MP_ROM_INT(COLOR_SPACE_RGB)               },
     { MP_ROM_QSTR(MP_QSTR_BGR),           MP_ROM_INT(COLOR_SPACE_BGR)               },
-    { MP_ROM_QSTR(MP_QSTR_MONOCHROME),    MP_ROM_INT(COLOR_SPACE_MONOCHROME)        }
+    { MP_ROM_QSTR(MP_QSTR_MONOCHROME),    MP_ROM_INT(COLOR_SPACE_MONOCHROME)        },
 };
 STATIC MP_DEFINE_CONST_DICT(lcd_st7789_locals_dict, lcd_st7789_locals_dict_table);
 

@@ -26,6 +26,25 @@ void hal_lcd_spi_panel_tx_color(
 
 void hal_lcd_spi_panel_deinit(mp_obj_base_t *self);
 
+// qspi
+void hal_lcd_qspi_panel_construct(mp_obj_base_t *self);
+
+void hal_lcd_qspi_panel_tx_param(
+    mp_obj_base_t *self,
+    int lcd_cmd,
+    const void *param,
+    size_t param_size
+);
+
+void hal_lcd_qspi_panel_tx_color(
+    mp_obj_base_t *self,
+    int lcd_cmd,
+    const void *color,
+    size_t color_size
+);
+
+void hal_lcd_qspi_panel_deinit(mp_obj_base_t *self);
+
 // i8080
 void hal_lcd_i80_construct(mp_obj_base_t *self);
 
