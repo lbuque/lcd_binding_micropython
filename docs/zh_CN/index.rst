@@ -16,13 +16,18 @@
 ===============
 
 - Intel 8080并行LCD
-- RGB LCD
+- DPI(RGB) LCD
+- SPI LCD
+- QSPI LCD
 
 已支持的驱动IC
 ==============
 
 - ST7789
 - ST7701s
+- ST7735
+- ILI9488
+- RM67162
 
 编译指南
 ========
@@ -54,14 +59,6 @@ esp32
     :hidden:
 
     self
-
-.. toctree::
-    :caption: API 参考
-    :maxdepth: 1
-
-    lcd
-
-.. toctree::
-    :maxdepth: 2
-
+    API 参考 <api-reference/lcd>
+    屏幕 WiKi <screen/index>
     版权 <COPYRIGHT>

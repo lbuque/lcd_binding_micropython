@@ -6,7 +6,7 @@ The ST7789 class is the Sitronix ST7789 hardware abstraction class, which implem
 Constructors
 ------------
 
-.. class:: ST7789(bus: I8080, reset: Pin=None, backlight: Pin=None, reset_level: bool=false, color_space: int=RGB, bits_per_pixel: int=16)
+.. class:: ST7789(bus: I8080, reset: Pin=None, backlight: Pin=None, reset_level: bool=false, color_space: int=RGB, bpp: int=16)
 
     Create an ST7789 hardware abstraction class.
 
@@ -17,7 +17,7 @@ Constructors
         - ``backlight``: Pin used for backlight signal
         - ``reset_level``: Setting this if the panel reset is high level active
         - ``color_space``: Set the color space used by the LCD panel
-        - ``bits_per_pixel``: Color depth, in bpp
+        - ``bpp``: Color depth, in bpp
 
 Methods
 -------
@@ -116,22 +116,31 @@ Methods
 
     Set the rotates the logical display in a counter-clockwise direction.
 
-    - ``0``: Portrait (0 degrees)
-    - ``1``: Landscape (90 degrees)
-    - ``2``: Inverse Portrait (180 degrees)
-    - ``3``: Inverse Landscape (270 degrees)
+    The ``r`` parameter accepts only the following values:
 
-Constants
----------
+        - ``0``: Portrait (0 degrees)
+        - ``1``: Landscape (90 degrees)
+        - ``2``: Inverse Portrait (180 degrees)
+        - ``3``: Inverse Landscape (270 degrees)
 
-.. data:: RGB
+    ``rotations`` sets the orientation table. The orientation table is a list of
+    tuples for each ``rotation`` used to set the MADCTL register, display width,
+    display height, start_x, and start_y values.
 
-    Color space: RGB
-
-.. data:: BGR
-
-    Color space: BGR
-
-.. data:: MONOCHROME
-
-    Color space: monochrome
+        +---------+----------------------------------------------------------------------------------------------------------+
+        | Display | Default Orientation Tables                                                                               |
+        +=========+==========================================================================================================+
+        | 240x320 | ((0x00, 240, 320,  0,  0), (0x60, 320, 240,  0,  0), (0xc0, 240, 320,  0,  0), (0xa0, 320, 240,  0,  0)) |
+        +---------+----------------------------------------------------------------------------------------------------------+
+        | 170x320 | ((0x00, 170, 320, 35, 0), (0x60, 320, 170, 0, 35), (0xc0, 170, 320, 35, 0), (0xa0, 320, 170, 0, 35))     |
+        +---------+----------------------------------------------------------------------------------------------------------+
+        | 240x240 | ((0x00, 240, 240,  0,  0), (0x60, 240, 240,  0,  0), (0xc0, 240, 240,  0, 80), (0xa0, 240, 240, 80,  0)) |
+        +---------+----------------------------------------------------------------------------------------------------------+
+        | 135x240 | ((0x00, 135, 240, 52, 40), (0x60, 240, 135, 40, 53), (0xc0, 135, 240, 53, 40), (0xa0, 240, 135, 40, 52)) |
+        +---------+----------------------------------------------------------------------------------------------------------+
+        | 128x160 | ((0x00, 128, 160,  0,  0), (0x60, 160, 128,  0,  0), (0xc0, 128, 160,  0,  0), (0xa0, 160, 128,  0,  0)) |
+        +---------+----------------------------------------------------------------------------------------------------------+
+        | 128x128 | ((0x00, 128, 128,  2,  1), (0x60, 128, 128,  1,  2), (0xc0, 128, 128,  2,  3), (0xa0, 128, 128,  3,  2)) |
+        +---------+----------------------------------------------------------------------------------------------------------+
+        | other   | ((0x00, 0, 0,  0,  0), (0x60, 0, 0,  0,  0), (0xc0, 0, 0,  0,  0), (0xa0, 0, 0,  0,  0))                 |
+        +---------+----------------------------------------------------------------------------------------------------------+

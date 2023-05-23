@@ -1,23 +1,23 @@
-class RGB -- RGB Interface
+class DPI -- DPI Interface
 ===========================
 
-RGB 类是 RGB并行接口硬件抽象类，它实现了RGB的一些通用接口。
+DPI 类是DPI（RGB）并行接口硬件抽象类，它实现了DPI的一些通用接口。
 
 Constructors
 ------------
 
-.. class:: RGB(data: tuple, hsync: Pin, vsync: Pin, de: Pin, pclk_pin: Pin, timings: tuple, disp: Pin=None, backlight: Pin=None, pclk: int=8000000, width: int=480, height: int=480)
+.. class:: DPI(data: tuple, hsync: Pin, vsync: Pin, de: Pin, pclk_pin: Pin, timings: tuple, disp: Pin=None, backlight: Pin=None, pclk: int=8000000, width: int=480, height: int=480)
 
-    创建一个 RGB 硬件抽象类。
+    创建一个 DPI 硬件抽象类。
 
     这些参数是：
 
-        - ``data``: 数据总线的元组，目前只支持 16-bit RGB 接口
+        - ``data``: 数据总线的元组，目前只支持 16-bit DPI 接口
         - ``hsync``: 垂直同步引脚对象
         - ``vsync``: 水平同步引脚对象
         - ``de``: 用于 DE 信号的引脚，如果不使用则设置为 None
         - ``pclk_pin``: 用于 PCLK 信号的引脚对象
-        - ``timings``: RGB时序参数
+        - ``timings``: DPI时序参数
         - ``disp``: 用于显示控制信号的引脚对象，如果不使用则设置为 None
         - ``backlight``: 背光控制引脚对象
         - ``pclk``: 像素时钟频率
@@ -39,19 +39,19 @@ Constructors
 Methods
 -------
 
-.. method:: RGB.reset()
+.. method:: DPI.reset()
 
     重置液晶面板。
 
-.. method:: RGB.init()
+.. method:: DPI.init()
 
     初始化液晶面板。
 
     .. note::
 
-        在调用此方法之前，请确保 LCD 面板已通过 RGB.reset() 完成重置阶段。
+        在调用此方法之前，请确保 LCD 面板已通过 DPI.reset() 完成重置阶段。
 
-.. method:: RGB.bitmap(x_start, y_start, x_end, y_end, color_data)
+.. method:: DPI.bitmap(x_start, y_start, x_end, y_end, color_data)
 
     在 LCD 面板上绘制位图。
 
@@ -61,9 +61,9 @@ Methods
     - ``y_start`` - y 轴上的起始索引（包括 y_start）
     - ``x_end`` - x 轴上的结束索引（不包括 x_end）
     - ``y_end`` - y 轴上的结束索引（不包括 y_end）
-    - ``color_data`` - 将转储到特定窗口范围的 RGB 颜色数据
+    - ``color_data`` - 将转储到特定窗口范围的 DPI 颜色数据
 
-.. method:: RGB.mirror(mirror_x: bool, mirror_y: bool)
+.. method:: DPI.mirror(mirror_x: bool, mirror_y: bool)
 
     在特定轴上镜像 LCD 面板。
 
@@ -74,9 +74,9 @@ Methods
 
     .. note::
 
-        结合RGB.swap_xy()，可以实现屏幕旋转
+        结合DPI.swap_xy()，可以实现屏幕旋转
 
-.. method:: RGB.swap_xy(swap_axes: bool)
+.. method:: DPI.swap_xy(swap_axes: bool)
 
     交换 x 和 y 轴。
 
@@ -84,9 +84,9 @@ Methods
 
     .. note::
 
-        结合RGB.mirror()，可以实现屏幕旋转
+        结合DPI.mirror()，可以实现屏幕旋转
 
-.. method:: RGB.set_gap(x_gap: int, y_gap: int)
+.. method:: DPI.set_gap(x_gap: int, y_gap: int)
 
     在 x 和 y 轴上设置额外的间隙。
 
@@ -101,26 +101,26 @@ Methods
 
         在定位或居中小于 LCD 的框架时，设置间隙非常有用。
 
-.. method:: RGB.invert_color(invert_color_data: bool)
+.. method:: DPI.invert_color(invert_color_data: bool)
 
     反转颜色（按位反转颜色数据线）
 
     - ``invert_color_data`` - 是否反转颜色数据
 
-.. method:: RGB.disp_off(off: bool)
+.. method:: DPI.disp_off(off: bool)
 
     关闭显示器。
 
     - ``off`` - 是否关闭屏幕
 
-.. method:: RGB.backlight_on()
+.. method:: DPI.backlight_on()
 
     打开背光
 
-.. method:: RGB.backlight_off()
+.. method:: DPI.backlight_off()
 
     关闭背光
 
-.. method:: RGB.deint()
+.. method:: DPI.deint()
 
     去初始化 LCD 面板。

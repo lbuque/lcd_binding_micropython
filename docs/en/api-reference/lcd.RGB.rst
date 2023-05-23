@@ -1,14 +1,14 @@
-class RGB -- RGB Interface
+class DPI -- DPI Interface
 ===========================
 
-The RGB class is the RGB parallel interface hardware abstract class, which implements some common interfaces of RGB.
+The DPI(RGB) class is the DPI(RGB) parallel interface hardware abstract class, which implements some common interfaces of DPI.
 
 Constructors
 ------------
 
-.. class:: RGB(data: tuple, hsync: Pin, vsync: Pin, de: Pin, pclk_pin: Pin, timings: tuple, disp: Pin=None, backlight: Pin=None, pclk: int=8000000, width: int=480, height: int=480)
+.. class:: DPI(data: tuple, hsync: Pin, vsync: Pin, de: Pin, pclk_pin: Pin, timings: tuple, disp: Pin=None, backlight: Pin=None, pclk: int=8000000, width: int=480, height: int=480)
 
-    Create an RGB hardware abstract class.
+    Create an DPI hardware abstract class.
 
     These parameters are:
 
@@ -39,19 +39,19 @@ Constructors
 Methods
 -------
 
-.. method:: RGB.reset()
+.. method:: DPI.reset()
 
     Reset LCD panel.
 
-.. method:: RGB.init()
+.. method:: DPI.init()
 
     Initialize LCD panel.
 
     .. note::
 
-        Before calling this method, make sure the LCD panel has finished the reset stage by RGB.reset().
+        Before calling this method, make sure the LCD panel has finished the reset stage by DPI.reset().
 
-.. method:: RGB.bitmap(x_start, y_start, x_end, y_end, color_data)
+.. method:: DPI.bitmap(x_start, y_start, x_end, y_end, color_data)
 
     Draw bitmap on LCD panel.
 
@@ -63,7 +63,7 @@ Methods
     - ``y_end`` - End index on y-axis (y_end not included)
     - ``color_data`` - RGB color data that will be dumped to the specific window range
 
-.. method:: RGB.mirror(mirror_x: bool, mirror_y: bool)
+.. method:: DPI.mirror(mirror_x: bool, mirror_y: bool)
 
     Mirror the LCD panel on specific axis.
 
@@ -74,9 +74,9 @@ Methods
 
     .. note::
 
-        Combined with RGB.swap_xy(), one can realize screen rotation
+        Combined with DPI.swap_xy(), one can realize screen rotation
 
-.. method:: RGB.swap_xy(swap_axes: bool)
+.. method:: DPI.swap_xy(swap_axes: bool)
 
     Swap/Exchange x and y axis.
 
@@ -84,9 +84,9 @@ Methods
 
     .. note::
 
-        Combined with RGB.mirror(), one can realize screen rotation
+        Combined with DPI.mirror(), one can realize screen rotation
 
-.. method:: RGB.set_gap(x_gap: int, y_gap: int)
+.. method:: DPI.set_gap(x_gap: int, y_gap: int)
 
     Set extra gap in x and y axis.
 
@@ -101,26 +101,26 @@ Methods
 
         Setting a gap is useful when positioning or centering a frame that is smaller than the LCD.
 
-.. method:: RGB.invert_color(invert_color_data: bool)
+.. method:: DPI.invert_color(invert_color_data: bool)
 
     Invert the color (bit-wise invert the color data line)
 
     - ``invert_color_data`` - Whether to invert the color data
 
-.. method:: RGB.disp_off(off: bool)
+.. method:: DPI.disp_off(off: bool)
 
     Turn off the display.
 
     - ``off`` - Whether to turn off the screen
 
-.. method:: RGB.backlight_on()
+.. method:: DPI.backlight_on()
 
     Turn on the backlight.
 
-.. method:: RGB.backlight_off()
+.. method:: DPI.backlight_off()
 
     turn off the backlight.
 
-.. method:: RGB.deint()
+.. method:: DPI.deint()
 
     Deinitialize the LCD panel.

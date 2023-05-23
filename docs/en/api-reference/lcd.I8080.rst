@@ -6,7 +6,7 @@ The I8080 class implements the general control and access interface of the I8080
 Constructors
 ------------
 
-.. class:: I8080(data: tuple=None, command: Pin=None, write: Pin=None, read: Pin=None, cs: Pin=None, pclk: int= 10000000，width: int=240, height: int=240, swap_color_bytes: bool=False, cmd_bits: int=8, param_bits: int=8)
+.. class:: I8080(data: tuple=None, command: Pin=None, write: Pin=None, read: Pin=None, cs: Pin=None, pclk: int= 10000000, width: int=240, height: int=240, swap_color_bytes: bool=False, cmd_bits: int=8, param_bits: int=8)
 
     Create an Intel 8080 object.
 

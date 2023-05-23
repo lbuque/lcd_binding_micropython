@@ -16,13 +16,18 @@ Supported LCD Types
 ====================
 
 - Intel 8080 parallel LCD
-- RGB LCD
+- DPI(RGB) LCD
+- SPI LCD
+- QSPI LCD
 
 Supported driver ICs
 =====================
 
 - ST7789
 - ST7701s
+- ST7735
+- ILI9488
+- RM67162
 
 Compiling guide
 ================
@@ -54,14 +59,6 @@ esp32
     :hidden:
 
     self
-
-.. toctree::
-    :caption: API Reference
-    :maxdepth: 1
-
-    lcd
-
-.. toctree::
-    :maxdepth: 2
-
+    API Reference <api-reference/lcd>
+    LCD WiKi <screen/index>
     Copyrights <COPYRIGHT>

@@ -1,0 +1,4 @@
+RM67162
+========
+
+- `LILYGO T-DisplayS3-AMOLED <https://github.com/Xinyuan-LilyGO/T-Display-S3-AMOLED>`_
