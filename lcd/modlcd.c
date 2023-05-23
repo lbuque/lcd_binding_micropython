@@ -3,6 +3,7 @@
 #include "st7735.h"
 #include "ili9488.h"
 #include "rm67162.h"
+#include "gc9a01.h"
 #include "spi_panel.h"
 #include "qspi_panel.h"
 #include "i80_panel.h"
@@ -19,6 +20,7 @@ STATIC const mp_map_elem_t mp_module_lcd_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_ST7735),     (mp_obj_t)&mp_lcd_st7735_type         },
     { MP_ROM_QSTR(MP_QSTR_ILI9488),    (mp_obj_t)&mp_lcd_ili9488_type        },
     { MP_ROM_QSTR(MP_QSTR_RM67162),    (mp_obj_t)&mp_lcd_rm67162_type        },
+    { MP_ROM_QSTR(MP_QSTR_GC9A01),     (mp_obj_t)&mp_lcd_gc9a01_type         },
     { MP_ROM_QSTR(MP_QSTR_I8080),      (mp_obj_t)&mp_lcd_i80_type            },
     { MP_ROM_QSTR(MP_QSTR_SPIPanel),   (mp_obj_t)&mp_lcd_spi_panel_type      },
     { MP_ROM_QSTR(MP_QSTR_QSPIPanel),  (mp_obj_t)&mp_lcd_qspi_panel_type     },
