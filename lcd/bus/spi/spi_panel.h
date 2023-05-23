@@ -27,6 +27,12 @@ typedef struct lcd_spi_panel_obj_t {
 #else
     void (*write_color)(mp_hal_pin_obj_t *databus, mp_hal_pin_obj_t wr, const uint8_t *buf, int len);
 #endif
+
+    enum {
+        LCD_SPI_PANEL_STATE_NONE,
+        LCD_SPI_PANEL_STATE_INIT,
+        LCD_SPI_PANEL_STATE_DEINIT
+    } state;
 } lcd_spi_panel_obj_t;
 
 extern const mp_obj_type_t lcd_spi_panel_type;

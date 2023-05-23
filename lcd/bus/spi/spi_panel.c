@@ -25,7 +25,7 @@ STATIC void lcd_spi_panel_print(
     lcd_spi_panel_obj_t *self = MP_OBJ_TO_PTR(self_in);
     mp_printf(
         print,
-        "<SPI Panel SPI=%p, dc=%p, write=%pcs=%p, width=%u, height=%u, cmd_bits=%u, param_bits=%u>",
+        "<SPI Panel SPI=%p, dc=%p, write=%p, cs=%p, width=%u, height=%u, cmd_bits=%u, param_bits=%u>",
         self->spi_obj,
         self->dc,
         self->wr,
@@ -132,7 +132,7 @@ STATIC mp_obj_t lcd_spi_panel_deinit(mp_obj_t self_in) {
     mp_obj_base_t *self = (mp_obj_base_t *)MP_OBJ_TO_PTR(self_in);
 
     hal_lcd_spi_panel_deinit(self);
-    // m_del_obj(lcd_spi_panel_obj_t, self);
+
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(lcd_spi_panel_deinit_obj, lcd_spi_panel_deinit);

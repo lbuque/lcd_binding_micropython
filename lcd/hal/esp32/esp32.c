@@ -16,17 +16,20 @@
 void hal_lcd_spi_panel_construct(mp_obj_base_t *self) {
     lcd_spi_panel_obj_t *spi_panel_obj = (lcd_spi_panel_obj_t *)self;
     machine_hw_spi_obj_t *spi_obj = ((machine_hw_spi_obj_t *)spi_panel_obj->spi_obj);
+    machine_hw_spi_obj_t old_self = *spi_obj;
     if (spi_obj->state == MACHINE_HW_SPI_STATE_INIT) {
         spi_obj->state = MACHINE_HW_SPI_STATE_DEINIT;
-        machine_hw_spi_deinit_internal(spi_obj);
+        machine_hw_spi_deinit_internal(&old_self);
     }
+    
     spi_bus_config_t buscfg = {
         .sclk_io_num = spi_obj->sck,
         .mosi_io_num = spi_obj->mosi,
         .miso_io_num = -1,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
-        .max_transfer_sz = spi_panel_obj->width * spi_panel_obj->height * 2 + 8,
+        // .max_transfer_sz = spi_panel_obj->width * spi_panel_obj->height * 2 + 8,
+        .max_transfer_sz = 0x4000 * 2 + 8,
     };
     esp_err_t ret = spi_bus_initialize(spi_obj->host, &buscfg, SPI_DMA_CH_AUTO);
     if (ret != 0) {
@@ -40,7 +43,8 @@ void hal_lcd_spi_panel_construct(mp_obj_base_t *self) {
         .pclk_hz = spi_panel_obj->pclk,
         .lcd_cmd_bits = spi_panel_obj->cmd_bits,
         .lcd_param_bits = spi_panel_obj->param_bits,
-        .spi_mode = 0,
+        .spi_mode = spi_obj->phase | (spi_obj->polarity << 1),
+        .flags.lsb_first = spi_obj->firstbit == MICROPY_PY_MACHINE_SPI_LSB ? SPI_DEVICE_TXBIT_LSBFIRST | SPI_DEVICE_RXBIT_LSBFIRST : 0,
         .trans_queue_depth = 10,
     };
 
@@ -53,6 +57,7 @@ void hal_lcd_spi_panel_construct(mp_obj_base_t *self) {
     if (ret != 0) {
         mp_raise_msg_varg(&mp_type_OSError, "%d(esp_lcd_new_panel_io_spi)", ret);
     }
+    spi_panel_obj->state = LCD_SPI_PANEL_STATE_INIT;
 }
 
 
@@ -104,7 +109,37 @@ inline void hal_lcd_spi_panel_tx_color(
 
 inline void hal_lcd_spi_panel_deinit(mp_obj_base_t *self) {
     lcd_spi_panel_obj_t *spi_panel_obj = (lcd_spi_panel_obj_t *)self;
-    esp_lcd_panel_io_del(spi_panel_obj->io_handle);
+    if (spi_panel_obj->state == LCD_SPI_PANEL_STATE_INIT) {
+        spi_panel_obj->state = LCD_SPI_PANEL_STATE_DEINIT;
+        esp_lcd_panel_io_del(spi_panel_obj->io_handle);
+
+        // esp_lcd_panel_io_del has already executed the operation of spi_bus_remove_device,
+        // so only need to execute spi_bus_free here.
+        machine_hw_spi_obj_t *spi_obj = ((machine_hw_spi_obj_t *)spi_panel_obj->spi_obj);
+        if (spi_obj->state == MACHINE_HW_SPI_STATE_INIT) {
+            spi_obj->state = MACHINE_HW_SPI_STATE_DEINIT;
+
+            switch (spi_bus_free(spi_obj->host)) {
+                case ESP_ERR_INVALID_ARG:
+                    mp_raise_msg(&mp_type_OSError, MP_ERROR_TEXT("invalid configuration"));
+                return;
+
+                case ESP_ERR_INVALID_STATE:
+                    mp_raise_msg(&mp_type_OSError, MP_ERROR_TEXT("SPI bus already freed"));
+                return;
+            }
+
+            int8_t pins[3] = {spi_obj->miso, spi_obj->mosi, spi_obj->sck};
+
+            for (int i = 0; i < 3; i++) {
+                if (pins[i] != -1) {
+                    gpio_pad_select_gpio(pins[i]);
+                    gpio_matrix_out(pins[i], SIG_GPIO_OUT_IDX, false, false);
+                    gpio_set_direction(pins[i], GPIO_MODE_INPUT);
+                }
+            }
+        }
+    }
 }
 
 
