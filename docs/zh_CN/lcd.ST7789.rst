@@ -34,7 +34,7 @@ Methods
 
         在调用此方法之前，请确保 LCD 面板已通过 RGB.reset() 完成重置阶段。
 
-.. method:: ST7789.bitmap(x_start, y_start, x_end, y_end, color_data)
+.. method:: ST7789.bitmap(x_start: int, y_start: int, x_end: int, y_end: int, color_data: bytes=None)
 
     在 LCD 面板上绘制位图。
 

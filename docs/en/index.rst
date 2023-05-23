@@ -40,7 +40,7 @@ esp32
 
 .. note::
 
-    Please prepare esp-idf v4.4.2 before compiling
+    Please prepare `esp-idf release/v4.4 <https://github.com/espressif/esp-idf/tree/release/v4.4>`_ before compiling
 
     For more detailed compilation of esp32, please refer to https://github.com/micropython/micropython/tree/master/ports/esp32
 

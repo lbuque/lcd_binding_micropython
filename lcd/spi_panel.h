@@ -29,12 +29,6 @@ typedef struct lcd_spi_panel_obj_t {
 #endif
 } lcd_spi_panel_obj_t;
 
-// spi panle protocol
-typedef struct _mp_machine_spi_panel_p_t {
-    void (*tx_param)(lcd_spi_panel_obj_t *self, int lcd_cmd, const void *param, size_t param_size);
-    void (*tx_color)(lcd_spi_panel_obj_t *self, int lcd_cmd, const void *color, size_t color_size);
-} mp_machine_spi_panel_p_t;
-
 extern const mp_obj_type_t lcd_spi_panel_type;
 
 #endif

@@ -27,7 +27,7 @@ Supported boards：
 
 - [LILYGO T-DisplayS3](https://github.com/Xinyuan-LilyGO/T-Display-S3)
 - [LILYGO T-RGB](https://github.com/Xinyuan-LilyGO/T-RGB)
-- [LILYGO T-Displat](https://github.com/Xinyuan-LilyGO/TTGO-T-Display)
+- [LILYGO T-Display](https://github.com/Xinyuan-LilyGO/TTGO-T-Display)
 
 ## Documentation
 

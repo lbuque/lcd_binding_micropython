@@ -42,12 +42,6 @@ typedef struct lcd_i80_obj_t {
 #endif
 } lcd_i80_obj_t;
 
-// I8080 protocol
-typedef struct _mp_machine_i8080_p_t {
-    void (*tx_param)(lcd_i80_obj_t *self, int lcd_cmd, const void *param, size_t param_size);
-    void (*tx_color)(lcd_i80_obj_t *self, int lcd_cmd, const void *color, size_t color_size);
-} mp_machine_i8080_p_t;
-
 extern const mp_obj_type_t lcd_i80_type;
 
 #endif

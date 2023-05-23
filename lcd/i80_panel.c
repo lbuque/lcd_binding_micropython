@@ -1,4 +1,5 @@
 #include "i80_panel.h"
+#include "lcd_panel.h"
 
 #if USE_ESP_LCD
 #include "hal/esp32.h"
@@ -15,25 +16,35 @@
 #include <string.h>
 
 
-STATIC void lcd_i80_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind)
-{
+STATIC void lcd_i80_print(
+    const mp_print_t *print,
+    mp_obj_t self_in,
+    mp_print_kind_t kind
+) {
     (void) kind;
     lcd_i80_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_printf(print, "<I8080 data=%p, dc=%p, write=%p, read=%p, cs=%p, width=%u, height=%u, cmd_bits=%u, param_bits=%u>",
-              self->databus,
-              self->dc,
-              self->wr,
-              self->rd,
-              self->cs,
-              self->width,
-              self->height,
-              self->cmd_bits,
-              self->param_bits);
+    mp_printf(
+        print,
+        "<I8080 data=%p, dc=%p, write=%p, read=%p, cs=%p, width=%u, height=%u, cmd_bits=%u, param_bits=%u>",
+        self->databus,
+        self->dc,
+        self->wr,
+        self->rd,
+        self->cs,
+        self->width,
+        self->height,
+        self->cmd_bits,
+        self->param_bits
+    );
 }
 
 
-STATIC mp_obj_t lcd_i80_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *all_args)
-{
+STATIC mp_obj_t lcd_i80_make_new(
+    const mp_obj_type_t *type,
+    size_t n_args,
+    size_t n_kw,
+    const mp_obj_t *all_args
+) {
     enum {
         ARG_data,
         ARG_command,
@@ -45,7 +56,8 @@ STATIC mp_obj_t lcd_i80_make_new(const mp_obj_type_t *type, size_t n_args, size_
         ARG_height,
         ARG_swap_color_bytes,
         ARG_cmd_bits,
-        ARG_param_bits };
+        ARG_param_bits
+    };
     const mp_arg_t make_new_args[] = {
         { MP_QSTR_data,             MP_ARG_OBJ | MP_ARG_KW_ONLY | MP_ARG_REQUIRED        },
         { MP_QSTR_command,          MP_ARG_OBJ | MP_ARG_KW_ONLY | MP_ARG_REQUIRED        },
@@ -60,7 +72,13 @@ STATIC mp_obj_t lcd_i80_make_new(const mp_obj_type_t *type, size_t n_args, size_
         { MP_QSTR_param_bits,       MP_ARG_INT | MP_ARG_KW_ONLY,  {.u_int = 8          } },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(make_new_args)];
-    mp_arg_parse_all_kw_array(n_args, n_kw, all_args, MP_ARRAY_SIZE(make_new_args), make_new_args, args);
+    mp_arg_parse_all_kw_array(
+        n_args, n_kw,
+        all_args,
+        MP_ARRAY_SIZE(make_new_args),
+        make_new_args,
+        args
+    );
 
     // create new object
     lcd_i80_obj_t *self = m_new_obj(lcd_i80_obj_t);
@@ -69,8 +87,7 @@ STATIC mp_obj_t lcd_i80_make_new(const mp_obj_type_t *type, size_t n_args, size_
     // data bus
     mp_obj_tuple_t *t = MP_OBJ_TO_PTR(args[ARG_data].u_obj);
     self->bus_width = t->len;
-    for (size_t i = 0; i < t->len; i++)
-    {
+    for (size_t i = 0; i < t->len; i++) {
         self->databus[i] = t->items[i];
     }
 
@@ -91,14 +108,13 @@ STATIC mp_obj_t lcd_i80_make_new(const mp_obj_type_t *type, size_t n_args, size_
         mp_hal_pin_write(rd_pin, 1);
     }
 
-    hal_lcd_i80_construct(self);
+    hal_lcd_i80_construct(&self->base);
     return MP_OBJ_FROM_PTR(self);
 }
 
 
-STATIC mp_obj_t lcd_i80_tx_param(size_t n_args, const mp_obj_t *args_in)
-{
-    lcd_i80_obj_t *self = MP_OBJ_TO_PTR(args_in[0]);
+STATIC mp_obj_t lcd_i80_tx_param(size_t n_args, const mp_obj_t *args_in) {
+    mp_obj_base_t *self = (mp_obj_base_t *)MP_OBJ_TO_PTR(args_in[0]);
     int cmd = mp_obj_get_int(args_in[1]);
     if (n_args == 3) {
         mp_buffer_info_t bufinfo;
@@ -113,9 +129,8 @@ STATIC mp_obj_t lcd_i80_tx_param(size_t n_args, const mp_obj_t *args_in)
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(lcd_i80_tx_param_obj, 2, 3, lcd_i80_tx_param);
 
 
-STATIC mp_obj_t lcd_i80_tx_color(size_t n_args, const mp_obj_t *args_in)
-{
-    lcd_i80_obj_t *self = MP_OBJ_TO_PTR(args_in[0]);
+STATIC mp_obj_t lcd_i80_tx_color(size_t n_args, const mp_obj_t *args_in) {
+    mp_obj_base_t *self = (mp_obj_base_t *)MP_OBJ_TO_PTR(args_in[0]);
     int cmd = mp_obj_get_int(args_in[1]);
 
     if (n_args == 3) {
@@ -132,9 +147,8 @@ STATIC mp_obj_t lcd_i80_tx_color(size_t n_args, const mp_obj_t *args_in)
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(lcd_i80_tx_color_obj, 2, 3, lcd_i80_tx_color);
 
 
-STATIC mp_obj_t lcd_i80_deinit(mp_obj_t self_in)
-{
-    lcd_i80_obj_t *self = MP_OBJ_TO_PTR(self_in);
+STATIC mp_obj_t lcd_i80_deinit(mp_obj_t self_in) {
+    mp_obj_base_t *self = (mp_obj_base_t *)MP_OBJ_TO_PTR(self_in);
 
     hal_lcd_i80_deinit(self);
     // m_del_obj(lcd_i80_obj_t, self);
@@ -152,9 +166,10 @@ STATIC const mp_rom_map_elem_t lcd_i80_locals_dict_table[] = {
 STATIC MP_DEFINE_CONST_DICT(lcd_i80_locals_dict, lcd_i80_locals_dict_table);
 
 
-STATIC const mp_machine_i8080_p_t mp_machine_i8080_p = {
+STATIC const mp_lcd_panel_p_t mp_lcd_panel_p = {
     .tx_param = hal_lcd_i80_tx_param,
-    .tx_color = hal_lcd_i80_tx_color
+    .tx_color = hal_lcd_i80_tx_color,
+    .deinit = hal_lcd_i80_deinit
 };
 
 
@@ -163,6 +178,6 @@ const mp_obj_type_t lcd_i80_type = {
     .name = MP_QSTR_I8080,
     .print = lcd_i80_print,
     .make_new = lcd_i80_make_new,
-    .protocol = &mp_machine_i8080_p,
+    .protocol = &mp_lcd_panel_p,
     .locals_dict = (mp_obj_dict_t *)&lcd_i80_locals_dict,
 };

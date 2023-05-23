@@ -1,26 +1,47 @@
 #ifndef _ESP32_H_
 #define _ESP32_H_
-#include "spi_panel.h"
-#include "i80_panel.h"
+
 #include "rgb_panel.h"
 
+#include "py/obj.h"
+
 // spi
-void hal_lcd_spi_panel_construct(lcd_spi_panel_obj_t *self);
+void hal_lcd_spi_panel_construct(mp_obj_base_t *self);
 
-void hal_lcd_spi_panel_tx_param(lcd_spi_panel_obj_t *self, int lcd_cmd, const void *param, size_t param_size);
+void hal_lcd_spi_panel_tx_param(
+    mp_obj_base_t *self,
+    int lcd_cmd,
+    const void *param,
+    size_t param_size
+);
 
-void hal_lcd_spi_panel_tx_color(lcd_spi_panel_obj_t *self, int lcd_cmd, const void *color, size_t color_size);
+void hal_lcd_spi_panel_tx_color(
+    mp_obj_base_t *self,
+    int lcd_cmd,
+    const void *color,
+    size_t color_size
+);
 
-void hal_lcd_spi_panel_deinit(lcd_spi_panel_obj_t *self);
+void hal_lcd_spi_panel_deinit(mp_obj_base_t *self);
 
 // i8080
-void hal_lcd_i80_construct(lcd_i80_obj_t *self);
+void hal_lcd_i80_construct(mp_obj_base_t *self);
 
-void hal_lcd_i80_tx_param(lcd_i80_obj_t *self, int lcd_cmd, const void *param, size_t param_size);
+void hal_lcd_i80_tx_param(
+    mp_obj_base_t *self,
+    int lcd_cmd,
+    const void *param,
+    size_t param_size
+);
 
-void hal_lcd_i80_tx_color(lcd_i80_obj_t *self, int lcd_cmd, const void *color, size_t color_size);
+void hal_lcd_i80_tx_color(
+    mp_obj_base_t *self,
+    int lcd_cmd,
+    const void *color,
+    size_t color_size
+);
 
-void hal_lcd_i80_deinit(lcd_i80_obj_t *self);
+void hal_lcd_i80_deinit(mp_obj_base_t *self);
 
 // rgb
 #if RGB_LCD_SUPPORTED

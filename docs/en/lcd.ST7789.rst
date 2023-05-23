@@ -34,7 +34,7 @@ Methods
 
         Before calling this method, make sure the LCD panel has finished the reset stage by ST7789.reset().
 
-.. method:: ST7789.bitmap(x_start, y_start, x_end, y_end, color_data)
+.. method:: ST7789.bitmap(x_start: int, y_start: int, x_end: int, y_end: int, color_data: bytes=None)
 
     Draw bitmap on LCD panel.
 
@@ -112,7 +112,7 @@ Methods
 
     Deinitialize the LCD panel.
 
-.. method:: rotation(r: int)
+.. method:: ST7789。rotation(r: int)
 
     Set the rotates the logical display in a counter-clockwise direction.
 

@@ -40,9 +40,9 @@ esp32
 
 .. note::
 
-    编译前请准备好esp-idf v4.4.2
+    编译前请准备好`esp-idf release/v4.4 <https://github.com/espressif/esp-idf/tree/release/v4.4>`_
 
-    关于esp32更详细的编译说，请参考 https://github.com/micropython/micropython/tree/master/ports/esp32
+    关于esp32更详细的编译说明，请参考 https://github.com/micropython/micropython/tree/master/ports/esp32
 
 .. code-block:: shell
 
