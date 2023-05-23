@@ -1,12 +1,10 @@
 #include "spi_panel.h"
 #include "lcd_panel.h"
 
-
-#if USE_ESP_LCD
+#include "modmachine.h"
+#include "extmod/machine_spi.h"
 #include "hal/esp32/esp32.h"
-#else
-#include "hal/commom/soft8080.h"
-#endif
+#include "hal/commom/softspi.h"
 
 #include "mphalport.h"
 
@@ -17,18 +15,17 @@
 #include <string.h>
 
 
-STATIC void lcd_spi_panel_print(
-    const mp_print_t *print,
-    mp_obj_t self_in, mp_print_kind_t kind
-) {
+STATIC void lcd_spi_panel_print(const mp_print_t *print,
+                                mp_obj_t          self_in,
+                                mp_print_kind_t   kind)
+{
     (void) kind;
     lcd_spi_panel_obj_t *self = MP_OBJ_TO_PTR(self_in);
     mp_printf(
         print,
-        "<SPI Panel SPI=%p, dc=%p, write=%p, cs=%p, width=%u, height=%u, cmd_bits=%u, param_bits=%u>",
+        "<SPI Panel SPI=%p, dc=%p, cs=%p, width=%u, height=%u, cmd_bits=%u, param_bits=%u>",
         self->spi_obj,
         self->dc,
-        self->wr,
         self->cs,
         self->width,
         self->height,
@@ -38,12 +35,11 @@ STATIC void lcd_spi_panel_print(
 }
 
 
-STATIC mp_obj_t lcd_spi_panel_make_new(
-    const mp_obj_type_t *type,
-    size_t n_args,
-    size_t n_kw,
-    const mp_obj_t *all_args
-) {
+STATIC mp_obj_t lcd_spi_panel_make_new(const mp_obj_type_t *type,
+                                       size_t               n_args,
+                                       size_t               n_kw,
+                                       const mp_obj_t      *all_args)
+{
     enum {
         ARG_spi,
         ARG_command,
@@ -51,7 +47,7 @@ STATIC mp_obj_t lcd_spi_panel_make_new(
         ARG_pclk,
         ARG_width,
         ARG_height,
-        ARG_swap_color_bytes,
+        // ARG_swap_color_bytes,
         ARG_cmd_bits,
         ARG_param_bits
     };
@@ -62,7 +58,7 @@ STATIC mp_obj_t lcd_spi_panel_make_new(
         { MP_QSTR_pclk,             MP_ARG_INT | MP_ARG_KW_ONLY,  {.u_int = 10000000   } },
         { MP_QSTR_width,            MP_ARG_INT | MP_ARG_KW_ONLY,  {.u_int = 240        } },
         { MP_QSTR_height,           MP_ARG_INT | MP_ARG_KW_ONLY,  {.u_int = 240        } },
-        { MP_QSTR_swap_color_bytes, MP_ARG_BOOL | MP_ARG_KW_ONLY, {.u_bool = false     } },
+        // { MP_QSTR_swap_color_bytes, MP_ARG_BOOL | MP_ARG_KW_ONLY, {.u_bool = false     } },
         { MP_QSTR_cmd_bits,         MP_ARG_INT | MP_ARG_KW_ONLY,  {.u_int = 8          } },
         { MP_QSTR_param_bits,       MP_ARG_INT | MP_ARG_KW_ONLY,  {.u_int = 8          } },
     };
@@ -89,12 +85,18 @@ STATIC mp_obj_t lcd_spi_panel_make_new(
     self->cmd_bits         = args[ARG_cmd_bits].u_int;
     self->param_bits       = args[ARG_param_bits].u_int;
 
-    hal_lcd_spi_panel_construct(&self->base);
+    if (mp_obj_is_type(self->spi_obj, &machine_hw_spi_type)) {
+        hal_lcd_spi_panel_construct(&self->base);
+    } else if (mp_obj_is_type(self->spi_obj, &mp_machine_soft_spi_type)) {
+        hal_lcd_softspi_panel_construct(&self->base);
+    }
+
     return MP_OBJ_FROM_PTR(self);
 }
 
 
-STATIC mp_obj_t lcd_spi_panel_tx_param(size_t n_args, const mp_obj_t *args_in){
+STATIC mp_obj_t lcd_spi_panel_tx_param(size_t n_args, const mp_obj_t *args_in)
+{
     mp_obj_base_t *self = (mp_obj_base_t *)MP_OBJ_TO_PTR(args_in[0]);
     int cmd = mp_obj_get_int(args_in[1]);
     if (n_args == 3) {
@@ -110,7 +112,8 @@ STATIC mp_obj_t lcd_spi_panel_tx_param(size_t n_args, const mp_obj_t *args_in){
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(lcd_spi_panel_tx_param_obj, 2, 3, lcd_spi_panel_tx_param);
 
 
-STATIC mp_obj_t lcd_spi_panel_tx_color(size_t n_args, const mp_obj_t *args_in) {
+STATIC mp_obj_t lcd_spi_panel_tx_color(size_t n_args, const mp_obj_t *args_in)
+{
     mp_obj_base_t *self = (mp_obj_base_t *)MP_OBJ_TO_PTR(args_in[0]);
     int cmd = mp_obj_get_int(args_in[1]);
 
@@ -128,7 +131,8 @@ STATIC mp_obj_t lcd_spi_panel_tx_color(size_t n_args, const mp_obj_t *args_in) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(lcd_spi_panel_tx_color_obj, 2, 3, lcd_spi_panel_tx_color);
 
 
-STATIC mp_obj_t lcd_spi_panel_deinit(mp_obj_t self_in) {
+STATIC mp_obj_t lcd_spi_panel_deinit(mp_obj_t self_in)
+{
     mp_obj_base_t *self = (mp_obj_base_t *)MP_OBJ_TO_PTR(self_in);
 
     hal_lcd_spi_panel_deinit(self);
@@ -147,10 +151,49 @@ STATIC const mp_rom_map_elem_t lcd_spi_panel_locals_dict_table[] = {
 STATIC MP_DEFINE_CONST_DICT(lcd_spi_panel_locals_dict, lcd_spi_panel_locals_dict_table);
 
 
+STATIC inline void mp_lcd_spi_panel_tx_param(mp_obj_base_t *self,
+                                        int            lcd_cmd,
+                                        const void    *param,
+                                        size_t         param_size)
+{
+    lcd_spi_panel_obj_t *spi_panel_obj = (lcd_spi_panel_obj_t *)self;
+    if (mp_obj_is_type(spi_panel_obj->spi_obj, &machine_hw_spi_type)) {
+        hal_lcd_spi_panel_tx_param(self, lcd_cmd, param, param_size);
+    } else if (mp_obj_is_type(spi_panel_obj->spi_obj, &mp_machine_soft_spi_type)) {
+        hal_lcd_softspi_panel_tx_param(self, lcd_cmd, param, param_size);
+    }
+}
+
+
+STATIC inline void mp_lcd_spi_panel_tx_color(mp_obj_base_t *self,
+                                        int            lcd_cmd,
+                                        const void    *color,
+                                        size_t         color_size)
+{
+    lcd_spi_panel_obj_t *spi_panel_obj = (lcd_spi_panel_obj_t *)self;
+    if (mp_obj_is_type(spi_panel_obj->spi_obj, &machine_hw_spi_type)) {
+        hal_lcd_spi_panel_tx_color(self, lcd_cmd, color, color_size);
+    } else if (mp_obj_is_type(spi_panel_obj->spi_obj, &mp_machine_soft_spi_type)) {
+        hal_lcd_softspi_panel_tx_color(self, lcd_cmd, color, color_size);
+    }
+}
+
+
+STATIC inline void mp_lcd_spi_panel_deinit(mp_obj_base_t *self)
+{
+    lcd_spi_panel_obj_t *spi_panel_obj = (lcd_spi_panel_obj_t *)self;
+    if (mp_obj_is_type(spi_panel_obj->spi_obj, &machine_hw_spi_type)) {
+        hal_lcd_spi_panel_deinit(self);
+    } else if (mp_obj_is_type(spi_panel_obj->spi_obj, &mp_machine_soft_spi_type)) {
+        hal_lcd_softspi_panel_deinit(self);
+    }
+}
+
+
 STATIC const mp_lcd_panel_p_t mp_lcd_panel_p = {
-    .tx_param = hal_lcd_spi_panel_tx_param,
-    .tx_color = hal_lcd_spi_panel_tx_color,
-    .deinit = hal_lcd_spi_panel_deinit
+    .tx_param = mp_lcd_spi_panel_tx_param,
+    .tx_color = mp_lcd_spi_panel_tx_color,
+    .deinit = mp_lcd_spi_panel_deinit
 };
 
 

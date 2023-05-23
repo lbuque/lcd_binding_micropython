@@ -15,13 +15,14 @@ typedef struct lcd_spi_panel_obj_t {
     uint16_t height;
 
     mp_obj_t dc;
-    mp_obj_t wr;
     mp_obj_t cs;
+    mp_hal_pin_obj_t dc_pin;
+    mp_hal_pin_obj_t cs_pin;
 
     uint32_t pclk;
     int cmd_bits;
     int param_bits;
-    bool swap_color_bytes;
+    // bool swap_color_bytes;
 #if USE_ESP_LCD
     esp_lcd_panel_io_handle_t io_handle;
 #else

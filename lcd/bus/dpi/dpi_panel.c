@@ -1,5 +1,7 @@
 #include "dpi_panel.h"
 
+#if DPI_LCD_SUPPORTED
+
 #if USE_ESP_LCD
 #include "esp32.h"
 #endif
@@ -314,3 +316,4 @@ const mp_obj_type_t lcd_dpi_type = {
     .make_new    = lcd_dpi_make_new,
     .locals_dict = (mp_obj_dict_t *)&lcd_dpi_locals_dict,
 };
+#endif

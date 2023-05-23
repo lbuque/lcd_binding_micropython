@@ -2,7 +2,7 @@
 
 #include "mphalport.h"
 
-#define DEBUG_printf(...)
+#define DEBUG_printf(...) // mp_printf(&mp_plat_print, __VA_ARGS__);
 
 #define CS_LOW()                               \
     {                                          \
@@ -26,7 +26,7 @@
 
 STATIC void write_bus(lcd_i80_obj_t *self, const uint8_t *buf, int len)
 {
-    static int last = 0;
+    static uint8_t last = 0;
     uint8_t b;
 
     for (int i = 0; i < len; i++) {
@@ -50,26 +50,11 @@ STATIC void write_bus(lcd_i80_obj_t *self, const uint8_t *buf, int len)
 
 STATIC void write_color(mp_hal_pin_obj_t *databus, mp_hal_pin_obj_t wr, const uint8_t *buf, int len)
 {
-    static int last = 0;
+    static uint8_t last = 0;
     uint8_t b;
 
-    for (int i = 0; i < len / 2; i++) {
-        b = buf[i * 2];
-        if (b != last) {
-            mp_hal_pin_write(databus[7], (b >> 7) & 1);
-            mp_hal_pin_write(databus[6], (b >> 6) & 1);
-            mp_hal_pin_write(databus[5], (b >> 5) & 1);
-            mp_hal_pin_write(databus[4], (b >> 4) & 1);
-            mp_hal_pin_write(databus[3], (b >> 3) & 1);
-            mp_hal_pin_write(databus[2], (b >> 2) & 1);
-            mp_hal_pin_write(databus[1], (b >> 1) & 1);
-            mp_hal_pin_write(databus[0], b & 1);
-            last = b;
-        }
-        mp_hal_pin_write(wr, 0);
-        mp_hal_pin_write(wr, 1);
-
-        b = buf[i * 2 + 1];
+    for (int i = 0; i < len; i++) {
+        b = buf[i];
         if (b != last) {
             mp_hal_pin_write(databus[7], (b >> 7) & 1);
             mp_hal_pin_write(databus[6], (b >> 6) & 1);
@@ -174,9 +159,7 @@ void hal_lcd_i80_tx_param(lcd_i80_obj_t *self, int lcd_cmd, const void *param, s
     CS_LOW()
     if (lcd_cmd) {
         DC_LOW();
-        write_bus(self, (uint8_t[]) {
-            lcd_cmd & 0xFF
-        }, 1);
+        write_bus(self, (uint8_t[]) { lcd_cmd & 0xFF}, 1);
     }
 
     DC_HIGH();
@@ -190,9 +173,7 @@ void hal_lcd_i80_tx_color(lcd_i80_obj_t *self, int lcd_cmd, const void *color, s
     CS_LOW()
     if (lcd_cmd) {
         DC_LOW();
-        write_bus(self, (uint8_t[]) {
-            lcd_cmd & 0xFF
-        }, 1);
+        write_bus(self, (uint8_t[]) { lcd_cmd & 0xFF }, 1);
     }
 
     DC_HIGH();

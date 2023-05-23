@@ -1,6 +1,8 @@
 #ifndef LCD_DPI_H_
 #define LCD_DPI_H_
 
+#if DPI_LCD_SUPPORTED
+
 #include "py/obj.h"
 #include "mphalport.h"
 #if USE_ESP_LCD
@@ -56,5 +58,7 @@ typedef struct lcd_dpi_obj_t {
 } lcd_dpi_obj_t;
 
 extern const mp_obj_type_t lcd_dpi_type;
+
+#endif
 
 #endif

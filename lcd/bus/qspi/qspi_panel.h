@@ -27,7 +27,7 @@ typedef struct lcd_qspi_panel_obj_t {
     uint32_t pclk;
     int cmd_bits;
     int param_bits;
-    bool swap_color_bytes;
+    // bool swap_color_bytes;
 #if USE_ESP_LCD
     spi_device_handle_t io_handle;
 #else

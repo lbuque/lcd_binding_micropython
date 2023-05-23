@@ -151,7 +151,7 @@ STATIC mp_obj_t lcd_i80_deinit(mp_obj_t self_in) {
     mp_obj_base_t *self = (mp_obj_base_t *)MP_OBJ_TO_PTR(self_in);
 
     hal_lcd_i80_deinit(self);
-    // m_del_obj(lcd_i80_obj_t, self);
+
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(lcd_i80_deinit_obj, lcd_i80_deinit);

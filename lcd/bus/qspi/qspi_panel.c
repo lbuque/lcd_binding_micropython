@@ -1,7 +1,6 @@
 #include "qspi_panel.h"
 #include "lcd_panel.h"
 
-
 #if USE_ESP_LCD
 #include "hal/esp32/esp32.h"
 #else
@@ -17,10 +16,10 @@
 #include <string.h>
 
 
-STATIC void lcd_qspi_panel_print(
-    const mp_print_t *print,
-    mp_obj_t self_in, mp_print_kind_t kind
-) {
+STATIC void lcd_qspi_panel_print(const mp_print_t *print,
+                                 mp_obj_t          self_in,
+                                  mp_print_kind_t  kind)
+{
     (void) kind;
     lcd_qspi_panel_obj_t *self = MP_OBJ_TO_PTR(self_in);
     mp_printf(
@@ -38,12 +37,11 @@ STATIC void lcd_qspi_panel_print(
 }
 
 
-STATIC mp_obj_t lcd_qspi_panel_make_new(
-    const mp_obj_type_t *type,
-    size_t n_args,
-    size_t n_kw,
-    const mp_obj_t *all_args
-) {
+STATIC mp_obj_t lcd_qspi_panel_make_new(const mp_obj_type_t *type,
+                                        size_t               n_args,
+                                        size_t               n_kw,
+                                        const mp_obj_t      *all_args)
+{
     enum {
         ARG_spi,
         ARG_data,
@@ -52,7 +50,7 @@ STATIC mp_obj_t lcd_qspi_panel_make_new(
         ARG_pclk,
         ARG_width,
         ARG_height,
-        ARG_swap_color_bytes,
+        // ARG_swap_color_bytes,
         ARG_cmd_bits,
         ARG_param_bits
     };
@@ -64,9 +62,9 @@ STATIC mp_obj_t lcd_qspi_panel_make_new(
         { MP_QSTR_pclk,             MP_ARG_INT | MP_ARG_KW_ONLY,  {.u_int = 10000000   } },
         { MP_QSTR_width,            MP_ARG_INT | MP_ARG_KW_ONLY,  {.u_int = 240        } },
         { MP_QSTR_height,           MP_ARG_INT | MP_ARG_KW_ONLY,  {.u_int = 240        } },
-        { MP_QSTR_swap_color_bytes, MP_ARG_BOOL | MP_ARG_KW_ONLY, {.u_bool = false     } },
-        { MP_QSTR_cmd_bits,         MP_ARG_INT | MP_ARG_KW_ONLY,  {.u_int = 8         } },
-        { MP_QSTR_param_bits,       MP_ARG_INT | MP_ARG_KW_ONLY,  {.u_int = 8          } },
+        // { MP_QSTR_swap_color_bytes, MP_ARG_BOOL | MP_ARG_KW_ONLY, {.u_bool = false     } },
+        { MP_QSTR_cmd_bits,         MP_ARG_INT | MP_ARG_KW_ONLY,  {.u_int = 8         }  },
+        { MP_QSTR_param_bits,       MP_ARG_INT | MP_ARG_KW_ONLY,  {.u_int = 8         }  },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(make_new_args)];
     mp_arg_parse_all_kw_array(
@@ -102,7 +100,8 @@ STATIC mp_obj_t lcd_qspi_panel_make_new(
 }
 
 
-STATIC mp_obj_t lcd_qspi_panel_tx_param(size_t n_args, const mp_obj_t *args_in){
+STATIC mp_obj_t lcd_qspi_panel_tx_param(size_t n_args, const mp_obj_t *args_in)
+{
     mp_obj_base_t *self = (mp_obj_base_t *)MP_OBJ_TO_PTR(args_in[0]);
     int cmd = mp_obj_get_int(args_in[1]);
     if (n_args == 3) {
@@ -118,7 +117,8 @@ STATIC mp_obj_t lcd_qspi_panel_tx_param(size_t n_args, const mp_obj_t *args_in){
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(lcd_qspi_panel_tx_param_obj, 2, 3, lcd_qspi_panel_tx_param);
 
 
-STATIC mp_obj_t lcd_qspi_panel_tx_color(size_t n_args, const mp_obj_t *args_in) {
+STATIC mp_obj_t lcd_qspi_panel_tx_color(size_t n_args, const mp_obj_t *args_in)
+{
     mp_obj_base_t *self = (mp_obj_base_t *)MP_OBJ_TO_PTR(args_in[0]);
     int cmd = mp_obj_get_int(args_in[1]);
 
@@ -136,7 +136,8 @@ STATIC mp_obj_t lcd_qspi_panel_tx_color(size_t n_args, const mp_obj_t *args_in) 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(lcd_qspi_panel_tx_color_obj, 2, 3, lcd_qspi_panel_tx_color);
 
 
-STATIC mp_obj_t lcd_qspi_panel_deinit(mp_obj_t self_in) {
+STATIC mp_obj_t lcd_qspi_panel_deinit(mp_obj_t self_in)
+{
     mp_obj_base_t *self = (mp_obj_base_t *)MP_OBJ_TO_PTR(self_in);
 
     hal_lcd_qspi_panel_deinit(self);
