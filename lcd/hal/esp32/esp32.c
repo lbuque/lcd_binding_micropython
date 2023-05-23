@@ -26,11 +26,7 @@ void hal_lcd_spi_panel_construct(mp_obj_base_t *self) {
         .miso_io_num = -1,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
-#if CONFIG_ESP32_SPIRAM_SUPPORT
         .max_transfer_sz = spi_panel_obj->width * spi_panel_obj->height * 2 + 8,
-#else
-        .max_transfer_sz = spi_panel_obj->width * 2 + 8,
-#endif
     };
     esp_err_t ret = spi_bus_initialize(spi_obj->host, &buscfg, SPI_DMA_CH_AUTO);
     if (ret != 0) {
@@ -82,7 +78,7 @@ inline void hal_lcd_spi_panel_tx_color(
     DEBUG_printf("tx_color cmd: %x, color_size: %u\n", lcd_cmd, color_size);
     lcd_spi_panel_obj_t *spi_panel_obj = (lcd_spi_panel_obj_t *)self;
 
-#if CONFIG_ESP32_SPIRAM_SUPPORT
+#if 1
     esp_lcd_panel_io_tx_color(spi_panel_obj->io_handle, lcd_cmd, color, color_size);
 #else
     size_t i = 0;

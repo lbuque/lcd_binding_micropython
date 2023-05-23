@@ -1,7 +1,9 @@
 #ifndef _ESP32_H_
 #define _ESP32_H_
 
+#if RGB_LCD_SUPPORTED
 #include "rgb_panel.h"
+#endif
 
 #include "py/obj.h"
 

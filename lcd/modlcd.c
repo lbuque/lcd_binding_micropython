@@ -1,5 +1,6 @@
 
 #include "st7789.h"
+#include "st7735.h"
 #include "spi_panel.h"
 #include "i80_panel.h"
 #if RGB_LCD_SUPPORTED
@@ -8,10 +9,10 @@
 
 #include "py/obj.h"
 
-
 STATIC const mp_map_elem_t mp_module_lcd_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_lcd)   },
     { MP_ROM_QSTR(MP_QSTR_ST7789),   (mp_obj_t)&lcd_st7789_type     },
+    { MP_ROM_QSTR(MP_QSTR_ST7735),   (mp_obj_t)&lcd_st7735_type     },
     { MP_ROM_QSTR(MP_QSTR_I8080),    (mp_obj_t)&lcd_i80_type        },
     { MP_ROM_QSTR(MP_QSTR_SPIPanel), (mp_obj_t)&lcd_spi_panel_type  },
 #if RGB_LCD_SUPPORTED

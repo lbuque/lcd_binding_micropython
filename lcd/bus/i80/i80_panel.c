@@ -2,9 +2,9 @@
 #include "lcd_panel.h"
 
 #if USE_ESP_LCD
-#include "hal/esp32.h"
+#include "hal/esp32/esp32.h"
 #else
-#include "hal/soft8080.h"
+#include "hal/commom/soft8080.h"
 #endif
 
 #include "mphalport.h"

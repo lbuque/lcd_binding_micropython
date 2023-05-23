@@ -1,7 +1,7 @@
 #include "rgb_panel.h"
 
 #if USE_ESP_LCD
-#include "hal/esp32.h"
+#include "esp32.h"
 #endif
 
 #include "py/obj.h"

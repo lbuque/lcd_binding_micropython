@@ -46,6 +46,7 @@ typedef struct lcd_st7789_obj_t {
     int x_gap;
     int y_gap;
     uint32_t bits_per_pixel;
+    uint8_t fb_bits_per_pixel;
     uint8_t madctl_val; // save current value of LCD_CMD_MADCTL register
     uint8_t colmod_cal; // save surrent value of LCD_CMD_COLMOD register
 } lcd_st7789_obj_t;
@@ -249,10 +250,12 @@ mp_obj_t lcd_st7789_make_new(
     switch (self->bits_per_pixel) {
         case 16:
             self->colmod_cal = 0x55;
+            self->fb_bits_per_pixel = 16;
         break;
 
         case 18:
             self->colmod_cal = 0x66;
+            self->fb_bits_per_pixel = 24;
         break;
 
         default:
@@ -321,6 +324,30 @@ STATIC mp_obj_t lcd_st7789_init(mp_obj_t self_in) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(lcd_st7789_init_obj, lcd_st7789_init);
 
 
+STATIC mp_obj_t lcd_st7789_custom_init(mp_obj_t self_in, mp_obj_t cmd_list_in) {
+    lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    mp_int_t id = 0;
+    mp_buffer_info_t args;
+    mp_int_t delay = 0;
+
+    mp_obj_tuple_t *cmd_list = MP_OBJ_TO_PTR(cmd_list_in);
+    for (size_t i = 0; i < cmd_list->len; i++) {
+        mp_obj_tuple_t *cmd = MP_OBJ_TO_PTR(cmd_list->items[i]);
+        id = mp_obj_get_int(cmd->items[0]);
+        mp_get_buffer_raise(cmd->items[1], &args, MP_BUFFER_READ);
+        delay = mp_obj_get_int(cmd->items[2]);
+
+        self->lcd_panel_p->tx_param(self->bus_obj, id, args.buf, args.len);
+        if (delay != 0) {
+            mp_hal_delay_us(delay * 1000);
+        }
+    }
+
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(lcd_st7789_custom_init_obj, lcd_st7789_custom_init);
+
+
 STATIC mp_obj_t lcd_st7789_bitmap(size_t n_args, const mp_obj_t *args_in) {
     lcd_st7789_obj_t *self = MP_OBJ_TO_PTR(args_in[0]);
 
@@ -349,7 +376,7 @@ STATIC mp_obj_t lcd_st7789_bitmap(size_t n_args, const mp_obj_t *args_in) {
             (((y_end - 1) >> 8) & 0xFF),
             ((y_end - 1) & 0xFF),
         }, 4);
-        size_t len = ((x_end - x_start) * (y_end - y_start) * self->bits_per_pixel / 8);
+        size_t len = ((x_end - x_start) * (y_end - y_start) * self->fb_bits_per_pixel / 8);
         self->lcd_panel_p->tx_color(self->bus_obj, 0x2C, bufinfo.buf, len);
     }
 
@@ -542,6 +569,7 @@ STATIC const mp_rom_map_elem_t lcd_st7789_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_deinit),        MP_ROM_PTR(&lcd_st7789_deinit_obj)        },
     { MP_ROM_QSTR(MP_QSTR_reset),         MP_ROM_PTR(&lcd_st7789_reset_obj)         },
     { MP_ROM_QSTR(MP_QSTR_init),          MP_ROM_PTR(&lcd_st7789_init_obj)          },
+    { MP_ROM_QSTR(MP_QSTR_custom_init),   MP_ROM_PTR(&lcd_st7789_custom_init_obj)   },
     { MP_ROM_QSTR(MP_QSTR_bitmap),        MP_ROM_PTR(&lcd_st7789_bitmap_obj)        },
     { MP_ROM_QSTR(MP_QSTR_mirror),        MP_ROM_PTR(&lcd_st7789_mirror_obj)        },
     { MP_ROM_QSTR(MP_QSTR_swap_xy),       MP_ROM_PTR(&lcd_st7789_swap_xy_obj)       },
