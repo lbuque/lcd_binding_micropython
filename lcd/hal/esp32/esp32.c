@@ -3,6 +3,9 @@
 #include "spi_panel.h"
 #include "qspi_panel.h"
 #include "i80_panel.h"
+#if DPI_LCD_SUPPORTED
+#include "dpi_panel.h"
+#endif
 
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_vendor.h"
@@ -351,96 +354,104 @@ inline void hal_lcd_i80_deinit(mp_obj_base_t *self) {
 }
 
 
-#if RGB_LCD_SUPPORTED
-void hal_lcd_rgb_construct(lcd_rgb_obj_t *self) {
+#if DPI_LCD_SUPPORTED
+void hal_lcd_dpi_construct(mp_obj_base_t *self)
+{
+    lcd_dpi_obj_t *dpi_obj = (lcd_dpi_obj_t *)self;
     esp_lcd_rgb_panel_config_t panel_config = {
         .clk_src = LCD_CLK_SRC_PLL160M,
         .timings = {
-            .pclk_hz = self->pclk,
-            .h_res = self->width,
-            .v_res = self->height,
+            .pclk_hz = dpi_obj->pclk,
+            .h_res = dpi_obj->width,
+            .v_res = dpi_obj->height,
             // The following parameters should refer to LCD spec
-            .hsync_pulse_width = self->timings.hsync_pulse_width,
-            .hsync_back_porch  = self->timings.hsync_back_porch,
-            .hsync_front_porch = self->timings.hsync_front_porch,
-            .vsync_pulse_width = self->timings.vsync_pulse_width,
-            .vsync_back_porch  = self->timings.vsync_back_porch,
-            .vsync_front_porch = self->timings.vsync_front_porch,
+            .hsync_pulse_width = dpi_obj->timings.hsync_pulse_width,
+            .hsync_back_porch  = dpi_obj->timings.hsync_back_porch,
+            .hsync_front_porch = dpi_obj->timings.hsync_front_porch,
+            .vsync_pulse_width = dpi_obj->timings.vsync_pulse_width,
+            .vsync_back_porch  = dpi_obj->timings.vsync_back_porch,
+            .vsync_front_porch = dpi_obj->timings.vsync_front_porch,
             .flags = {
                 .pclk_active_neg = 1,
             },
         },
-        .data_width = self->bus_width, // RGB565 in parallel mode, thus 16bit in width
+        .data_width = dpi_obj->bus_width, // RGB565 in parallel mode, thus 16bit in width
         .psram_trans_align = 64,
-        .hsync_gpio_num = mp_hal_get_pin_obj(self->hsync_obj),
-        .vsync_gpio_num = mp_hal_get_pin_obj(self->vsync_obj),
-        .de_gpio_num = mp_hal_get_pin_obj(self->de_obj),
-        .pclk_gpio_num  = mp_hal_get_pin_obj(self->pclk_obj),
+        .hsync_gpio_num = mp_hal_get_pin_obj(dpi_obj->hsync_obj),
+        .vsync_gpio_num = mp_hal_get_pin_obj(dpi_obj->vsync_obj),
+        .de_gpio_num = mp_hal_get_pin_obj(dpi_obj->de_obj),
+        .pclk_gpio_num  = mp_hal_get_pin_obj(dpi_obj->pclk_obj),
         .data_gpio_nums = {
-            mp_hal_get_pin_obj(self->databus_obj[0]),
-            mp_hal_get_pin_obj(self->databus_obj[1]),
-            mp_hal_get_pin_obj(self->databus_obj[2]),
-            mp_hal_get_pin_obj(self->databus_obj[3]),
-            mp_hal_get_pin_obj(self->databus_obj[4]),
-            mp_hal_get_pin_obj(self->databus_obj[5]),
-            mp_hal_get_pin_obj(self->databus_obj[6]),
-            mp_hal_get_pin_obj(self->databus_obj[7]),
-            mp_hal_get_pin_obj(self->databus_obj[8]),
-            mp_hal_get_pin_obj(self->databus_obj[9]),
-            mp_hal_get_pin_obj(self->databus_obj[10]),
-            mp_hal_get_pin_obj(self->databus_obj[11]),
-            mp_hal_get_pin_obj(self->databus_obj[12]),
-            mp_hal_get_pin_obj(self->databus_obj[13]),
-            mp_hal_get_pin_obj(self->databus_obj[14]),
-            mp_hal_get_pin_obj(self->databus_obj[15]),
+            mp_hal_get_pin_obj(dpi_obj->databus_obj[0]),
+            mp_hal_get_pin_obj(dpi_obj->databus_obj[1]),
+            mp_hal_get_pin_obj(dpi_obj->databus_obj[2]),
+            mp_hal_get_pin_obj(dpi_obj->databus_obj[3]),
+            mp_hal_get_pin_obj(dpi_obj->databus_obj[4]),
+            mp_hal_get_pin_obj(dpi_obj->databus_obj[5]),
+            mp_hal_get_pin_obj(dpi_obj->databus_obj[6]),
+            mp_hal_get_pin_obj(dpi_obj->databus_obj[7]),
+            mp_hal_get_pin_obj(dpi_obj->databus_obj[8]),
+            mp_hal_get_pin_obj(dpi_obj->databus_obj[9]),
+            mp_hal_get_pin_obj(dpi_obj->databus_obj[10]),
+            mp_hal_get_pin_obj(dpi_obj->databus_obj[11]),
+            mp_hal_get_pin_obj(dpi_obj->databus_obj[12]),
+            mp_hal_get_pin_obj(dpi_obj->databus_obj[13]),
+            mp_hal_get_pin_obj(dpi_obj->databus_obj[14]),
+            mp_hal_get_pin_obj(dpi_obj->databus_obj[15]),
         },
-        .disp_gpio_num = self->disp_pin,
+        .disp_gpio_num = dpi_obj->disp_pin,
         .on_frame_trans_done = NULL,
         .user_ctx = NULL,
         .flags = {
             .fb_in_psram = 1, // allocate frame buffer in PSRAM
         },
     };
-    esp_err_t ret = esp_lcd_new_rgb_panel(&panel_config, &self->panel_handle);
+    esp_err_t ret = esp_lcd_new_rgb_panel(&panel_config, &dpi_obj->panel_handle);
     if (ret != 0) {
         mp_raise_msg_varg(&mp_type_OSError, "%d(esp_lcd_new_rgb_panel)", ret);
     }
-    ret = esp_lcd_panel_reset(self->panel_handle);
+    ret = esp_lcd_panel_reset(dpi_obj->panel_handle);
     if (ret != 0) {
         mp_raise_msg_varg(&mp_type_OSError, "%d(esp_lcd_panel_reset)", ret);
     }
-    ret = esp_lcd_panel_init(self->panel_handle);
+    ret = esp_lcd_panel_init(dpi_obj->panel_handle);
     if (ret != 0) {
         mp_raise_msg_varg(&mp_type_OSError, "%d(esp_lcd_panel_init)", ret);
     }
 }
 
 
-inline void hal_lcd_rgb_reset(lcd_rgb_obj_t *self) {
-    esp_lcd_panel_reset(self->panel_handle);
+inline void hal_lcd_dpi_reset(mp_obj_base_t *self)
+{
+    lcd_dpi_obj_t *dpi_obj = (lcd_dpi_obj_t *)self;
+    esp_lcd_panel_reset(dpi_obj->panel_handle);
 }
 
 
-inline void hal_lcd_rgb_init(lcd_rgb_obj_t *self) {
-    esp_lcd_panel_init(self->panel_handle);
+inline void hal_lcd_dpi_init(mp_obj_base_t *self)
+{
+    lcd_dpi_obj_t *dpi_obj = (lcd_dpi_obj_t *)self;
+    esp_lcd_panel_init(dpi_obj->panel_handle);
 }
 
 
-inline void hal_lcd_rgb_del(lcd_rgb_obj_t *self) {
-    esp_lcd_panel_del(self->panel_handle);
+inline void hal_lcd_dpi_del(mp_obj_base_t *self)
+{
+    lcd_dpi_obj_t *dpi_obj = (lcd_dpi_obj_t *)self;
+    esp_lcd_panel_del(dpi_obj->panel_handle);
 }
 
 
-inline void hal_lcd_rgb_bitmap(
-    lcd_rgb_obj_t *self,
-    int x_start,
-    int y_start,
-    int x_end,
-    int y_end,
-    const void *color_data
-) {
+inline void hal_lcd_dpi_bitmap(mp_obj_base_t *self,
+                               int            x_start,
+                               int            y_start,
+                               int            x_end,
+                               int            y_end,
+                               const void    *color_data)
+{
+    lcd_dpi_obj_t *dpi_obj = (lcd_dpi_obj_t *)self;
     esp_lcd_panel_draw_bitmap(
-        self->panel_handle,
+        dpi_obj->panel_handle,
         x_start,
         y_start,
         x_end,
@@ -450,34 +461,39 @@ inline void hal_lcd_rgb_bitmap(
 }
 
 
-inline void hal_lcd_rgb_mirror(
-    lcd_rgb_obj_t *self,
-    bool mirror_x,
-    bool mirror_y
-) {
-    esp_lcd_panel_mirror(self->panel_handle, mirror_x, mirror_y);
+inline void hal_lcd_dpi_mirror(mp_obj_base_t *self,
+                               bool           mirror_x,
+                               bool           mirror_y)
+{
+    lcd_dpi_obj_t *dpi_obj = (lcd_dpi_obj_t *)self;
+    esp_lcd_panel_mirror(dpi_obj->panel_handle, mirror_x, mirror_y);
 }
 
 
-inline void hal_lcd_rgb_swap_xy(lcd_rgb_obj_t *self, bool swap_axes) {
-    esp_lcd_panel_swap_xy(self->panel_handle, swap_axes);
+inline void hal_lcd_dpi_swap_xy(mp_obj_base_t *self, bool swap_axes)
+{
+    lcd_dpi_obj_t *dpi_obj = (lcd_dpi_obj_t *)self;
+    esp_lcd_panel_swap_xy(dpi_obj->panel_handle, swap_axes);
 }
 
 
-inline void hal_lcd_rgb_set_gap(lcd_rgb_obj_t *self, int x_gap, int y_gap) {
-    esp_lcd_panel_set_gap(self->panel_handle, x_gap, y_gap);
+inline void hal_lcd_dpi_set_gap(mp_obj_base_t *self, int x_gap, int y_gap)
+{
+    lcd_dpi_obj_t *dpi_obj = (lcd_dpi_obj_t *)self;
+    esp_lcd_panel_set_gap(dpi_obj->panel_handle, x_gap, y_gap);
 }
 
 
-inline void hal_lcd_rgb_invert_color(
-    lcd_rgb_obj_t *self,
-    bool invert_color_data
-) {
-    esp_lcd_panel_invert_color(self->panel_handle, invert_color_data);
+inline void hal_lcd_dpi_invert_color(mp_obj_base_t *self, bool invert_color_data)
+{
+    lcd_dpi_obj_t *dpi_obj = (lcd_dpi_obj_t *)self;
+    esp_lcd_panel_invert_color(dpi_obj->panel_handle, invert_color_data);
 }
 
 
-inline void hal_lcd_rgb_disp_off(lcd_rgb_obj_t *self, bool off) {
-    esp_lcd_panel_disp_off(self->panel_handle, off);
+inline void hal_lcd_dpi_disp_off(mp_obj_base_t *self, bool off)
+{
+    lcd_dpi_obj_t *dpi_obj = (lcd_dpi_obj_t *)self;
+    esp_lcd_panel_disp_off(dpi_obj->panel_handle, off);
 }
 #endif

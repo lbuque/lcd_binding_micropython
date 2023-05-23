@@ -1,5 +1,5 @@
-#ifndef LCD_RGB_H_
-#define LCD_RGB_H_
+#ifndef LCD_DPI_H_
+#define LCD_DPI_H_
 
 #include "py/obj.h"
 #include "mphalport.h"
@@ -7,7 +7,7 @@
 #include "esp_lcd_panel_io.h"
 #endif
 
-typedef struct lcd_rgb_obj_t {
+typedef struct lcd_dpi_obj_t {
     mp_obj_base_t base;
 
     uint16_t width;
@@ -53,8 +53,8 @@ typedef struct lcd_rgb_obj_t {
 #if USE_ESP_LCD
     esp_lcd_panel_handle_t panel_handle;
 #endif
-} lcd_rgb_obj_t;
+} lcd_dpi_obj_t;
 
-extern const mp_obj_type_t lcd_rgb_type;
+extern const mp_obj_type_t lcd_dpi_type;
 
 #endif
