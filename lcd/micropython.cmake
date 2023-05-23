@@ -32,6 +32,8 @@ set(ST7735_DRIVER_SRC ${DRIVER_DIR}/st7735/st7735.c)
 set(ST7735_DRIVER_INC ${DRIVER_DIR}/st7735)
 set(ST7789_DRIVER_SRC ${DRIVER_DIR}/st7789/st7789.c)
 set(ST7789_DRIVER_INC ${DRIVER_DIR}/st7789)
+set(ILI9488_DRIVER_SRC ${DRIVER_DIR}/ili9488/ili9488.c)
+set(ILI9488_DRIVER_INC ${DRIVER_DIR}/ili9488)
 
 # Add our source files to the lib
 set(SRC ${CMAKE_CURRENT_LIST_DIR}/modlcd.c)
@@ -42,6 +44,7 @@ LIST(APPEND SRC ${I8080_BUS_SRC})
 # LIST(APPEND SRC ${DPI_BUS_SRC})
 LIST(APPEND SRC ${ST7735_DRIVER_SRC})
 LIST(APPEND SRC ${ST7789_DRIVER_SRC})
+LIST(APPEND SRC ${ILI9488_DRIVER_SRC})
 
 set(INC ${CMAKE_CURRENT_LIST_DIR} ${HAL_DIR}/esp32)
 LIST(APPEND INC ${ESP32_HAL_INC})
@@ -51,6 +54,7 @@ LIST(APPEND INC ${I8080_BUS_INC})
 # LIST(APPEND INC ${DPI_BUS_INC})
 LIST(APPEND INC ${ST7735_DRIVER_INC})
 LIST(APPEND INC ${ST7789_DRIVER_INC})
+LIST(APPEND INC ${ILI9488_DRIVER_INC})
 
 target_compile_definitions(usermod_lcd INTERFACE USE_ESP_LCD=1)
 
@@ -66,7 +70,7 @@ target_compile_definitions(usermod_lcd INTERFACE USE_ESP_LCD=1)
 # endif()
 
 target_sources(usermod_lcd INTERFACE ${SRC})
-
+target_compile_options(usermod_lcd INTERFACE "-g")
 # Add the current directory as an include directory.
 target_include_directories(usermod_lcd INTERFACE ${INC})
 

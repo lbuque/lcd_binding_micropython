@@ -1,0 +1,1 @@
+lcd: http://www.lcdwiki.com/zh/3.5inch_SPI_Module_ILI9488_SKU:MSP3520#.E5.B8.B8.E7.94.A8.E8.BD.AF.E4.BB.B6
