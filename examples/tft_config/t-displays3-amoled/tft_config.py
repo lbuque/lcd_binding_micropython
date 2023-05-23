@@ -30,7 +30,7 @@ def config():
         width=240,
         height=536
     )
-    rm = lcd.RM67162(panel, reset=Pin(17), bpp=24)
+    rm = lcd.RM67162(panel, reset=Pin(17), bpp=16)
     rm.reset()
     rm.init()
     # rm.custom_init(rm67162_qspi_init)
