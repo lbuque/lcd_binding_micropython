@@ -82,7 +82,11 @@ STATIC mp_obj_t mp_lcd_spi_panel_make_new(const mp_obj_type_t *type,
     self->cmd_bits   = args[ARG_cmd_bits].u_int;
     self->param_bits = args[ARG_param_bits].u_int;
 
+#if (MICROPY_VERSION_MAJOR == 1) && (MICROPY_VERSION_MINOR >= 20)
     if (mp_obj_is_type(self->spi_obj, &machine_spi_type)) {
+#else
+    if (mp_obj_is_type(self->spi_obj, &machine_hw_spi_type)) {
+#endif
         hal_lcd_spi_panel_construct(&self->base);
     } else if (mp_obj_is_type(self->spi_obj, &mp_machine_soft_spi_type)) {
         hal_lcd_softspi_panel_construct(&self->base);
@@ -154,7 +158,11 @@ STATIC inline void mp_lcd_spi_panel_p_tx_param(mp_obj_base_t *self,
                                                size_t         param_size)
 {
     mp_lcd_spi_panel_obj_t *spi_panel_obj = (mp_lcd_spi_panel_obj_t *)self;
+#if (MICROPY_VERSION_MAJOR == 1) && (MICROPY_VERSION_MINOR >= 20)
     if (mp_obj_is_type(spi_panel_obj->spi_obj, &machine_spi_type)) {
+#else
+    if (mp_obj_is_type(spi_panel_obj->spi_obj, &machine_hw_spi_type)) {
+#endif
         hal_lcd_spi_panel_tx_param(self, lcd_cmd, param, param_size);
     } else if (mp_obj_is_type(spi_panel_obj->spi_obj, &mp_machine_soft_spi_type)) {
         hal_lcd_softspi_panel_tx_param(self, lcd_cmd, param, param_size);
@@ -168,7 +176,11 @@ STATIC inline void mp_lcd_spi_panel_p_tx_color(mp_obj_base_t *self,
                                                size_t         color_size)
 {
     mp_lcd_spi_panel_obj_t *spi_panel_obj = (mp_lcd_spi_panel_obj_t *)self;
+#if (MICROPY_VERSION_MAJOR == 1) && (MICROPY_VERSION_MINOR >= 20)
     if (mp_obj_is_type(spi_panel_obj->spi_obj, &machine_spi_type)) {
+#else
+    if (mp_obj_is_type(spi_panel_obj->spi_obj, &machine_hw_spi_type)) {
+#endif
         hal_lcd_spi_panel_tx_color(self, lcd_cmd, color, color_size);
     } else if (mp_obj_is_type(spi_panel_obj->spi_obj, &mp_machine_soft_spi_type)) {
         hal_lcd_softspi_panel_tx_color(self, lcd_cmd, color, color_size);
@@ -179,7 +191,11 @@ STATIC inline void mp_lcd_spi_panel_p_tx_color(mp_obj_base_t *self,
 STATIC inline void mp_lcd_spi_panel_p_deinit(mp_obj_base_t *self)
 {
     mp_lcd_spi_panel_obj_t *spi_panel_obj = (mp_lcd_spi_panel_obj_t *)self;
+#if (MICROPY_VERSION_MAJOR == 1) && (MICROPY_VERSION_MINOR >= 20)
     if (mp_obj_is_type(spi_panel_obj->spi_obj, &machine_spi_type)) {
+#else
+    if (mp_obj_is_type(spi_panel_obj->spi_obj, &machine_hw_spi_type)) {
+#endif
         hal_lcd_spi_panel_deinit(self);
     } else if (mp_obj_is_type(spi_panel_obj->spi_obj, &mp_machine_soft_spi_type)) {
         hal_lcd_softspi_panel_deinit(self);
