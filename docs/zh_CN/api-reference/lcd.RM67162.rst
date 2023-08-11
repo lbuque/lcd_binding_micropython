@@ -133,7 +133,7 @@ Methods
         | other   | ((0x00, 0, 0, 0, 0), (0x60, 0, 0, 0, 0), (0xC0, 0, 0, 0, 0), (0xA0, 0, 0, 0, 0))                         |
         +---------+----------------------------------------------------------------------------------------------------------+
 
-.. method:: ILI9488.vscroll_area(tfa: int, height: int, bfa: int)
+.. method:: RM67162.vscroll_area(tfa: int, height: int, bfa: int)
 
     设置垂直滚动参数。
 
@@ -143,9 +143,9 @@ Methods
 
     - ``bfa`` 是以像素为单位的底部固定区域。 底部固定区域是显示帧缓冲区的下部，不会滚动。
 
-.. method:: ILI9488.vscroll_start(address: int, order: bool=False)
+.. method:: RM67162.vscroll_start(address: int, order: bool=False)
 
     设置垂直滚动地址。
 
     - ``address`` 是以像素为单位的垂直滚动起始地址。 垂直滚动起始地址是帧缓冲区中的行，将是 TFA 之后显示的第一行。
-    - ``order`` 是垂直刷新顺序。 当``order`` == ``False``时，LCD垂直刷新从上到下； 当``order`` == ``False``时，LCD垂直刷新从下到上。
+    - ``order`` 是垂直刷新顺序。 当 ``order`` == ``False`` 时，LCD垂直刷新从上到下； 当 ``order`` == ``False`` 时，LCD垂直刷新从下到上。
